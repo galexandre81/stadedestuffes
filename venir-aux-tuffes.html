@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Venir aux Tuffes – Stade Nordique des Tuffes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bleu:    #0a1f3c;
+      --bleu-mid:#123568;
+      --cyan:    #00b4d8;
+      --blanc:   #f5f7fa;
+      --gris:    #8a9ab5;
+      --neige:   #dde8f5;
+      --or:      #f5a623;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      font-weight: 300;
+      background: var(--bleu);
+      color: var(--blanc);
+      overflow-x: hidden;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      min-height: 52vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 3rem 2rem 3.5rem;
+      overflow: hidden;
+      background: linear-gradient(160deg, #0d2a50 0%, #0a1f3c 60%, #061428 100%);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 80% 30%, rgba(0,180,216,.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 10% 80%, rgba(18,53,104,.6) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      border: 1px solid rgba(0,180,216,.4);
+      padding: .3rem .9rem;
+      border-radius: 2px;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(3rem, 9vw, 7rem);
+      font-weight: 800;
+      line-height: .95;
+      letter-spacing: -.01em;
+      text-transform: uppercase;
+      color: var(--blanc);
+      position: relative;
+    }
+    .hero h1 span {
+      color: var(--cyan);
+    }
+    .hero-sub {
+      margin-top: 1rem;
+      font-size: 1.05rem;
+      color: var(--neige);
+      max-width: 52ch;
+      opacity: .85;
+      line-height: 1.55;
+    }
+    .hero-mountains {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 55%;
+      height: 55%;
+      pointer-events: none;
+      opacity: .07;
+    }
+
+    /* ─── LAYOUT ─── */
+    .page-content {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+
+    /* ─── SECTION TITLES ─── */
+    .section {
+      margin-top: 4.5rem;
+    }
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      margin-bottom: 1.6rem;
+    }
+    .section-label .icon {
+      width: 2.4rem;
+      height: 2.4rem;
+      background: var(--cyan);
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .section-label .icon svg {
+      width: 1.2rem;
+      height: 1.2rem;
+      fill: var(--bleu);
+    }
+    .section-label h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--blanc);
+    }
+
+    /* ─── ADRESSE CARD ─── */
+    .address-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    @media (max-width: 640px) { .address-grid { grid-template-columns: 1fr; } }
+    .addr-card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 1.4rem 1.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+    }
+    .addr-card .label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .75rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+    .addr-card .value {
+      font-size: 1.05rem;
+      color: var(--blanc);
+      font-weight: 400;
+      line-height: 1.45;
+    }
+    .addr-card .value strong {
+      font-weight: 600;
+    }
+    .cta-map {
+      margin-top: 1.6rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      background: var(--cyan);
+      color: var(--bleu);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: .75rem 1.4rem;
+      border-radius: 4px;
+      transition: background .2s, transform .15s;
+    }
+    .cta-map:hover { background: #33c5e5; transform: translateY(-1px); }
+    .cta-map svg { width: 1.1rem; height: 1.1rem; fill: var(--bleu); flex-shrink: 0; }
+
+    /* ─── MAP ─── */
+    .map-wrapper {
+      margin-top: 2rem;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 8px 40px rgba(0,0,0,.4);
+      height: 420px;
+    }
+    .map-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ─── PARKING ─── */
+    .parking-block {
+      background: linear-gradient(135deg, rgba(0,180,216,.1) 0%, rgba(18,53,104,.2) 100%);
+      border: 1px solid rgba(0,180,216,.25);
+      border-left: 4px solid var(--cyan);
+      border-radius: 8px;
+      padding: 1.8rem 2rem;
+    }
+    .parking-block p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--neige);
+    }
+    .parking-block p + p { margin-top: .9rem; }
+    .parking-block strong {
+      color: var(--blanc);
+      font-weight: 500;
+    }
+    .parking-note {
+      margin-top: 1.1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: .7rem;
+      background: rgba(245,166,35,.08);
+      border: 1px solid rgba(245,166,35,.25);
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      font-size: .92rem;
+      color: #f5d78e;
+      line-height: 1.55;
+    }
+    .parking-note svg {
+      flex-shrink: 0;
+      width: 1.2rem;
+      height: 1.2rem;
+      fill: var(--or);
+      margin-top: .05rem;
+    }
+
+    /* ─── HÉBERGEMENTS ─── */
+    .villages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: .5rem;
+    }
+    .village-card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      text-align: center;
+      transition: border-color .2s, background .2s;
+    }
+    .village-card:hover {
+      border-color: rgba(0,180,216,.5);
+      background: rgba(0,180,216,.07);
+    }
+    .village-card .village-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--blanc);
+    }
+    .village-card .village-type {
+      font-size: .8rem;
+      color: var(--gris);
+      margin-top: .25rem;
+    }
+    .heberg-intro {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--neige);
+      margin-bottom: 1.5rem;
+    }
+    /* ─── CNSNMM BLOCK ─── */
+    .cnsnmm-block {
+      background: linear-gradient(135deg, rgba(0,180,216,.08) 0%, rgba(18,53,104,.18) 100%);
+      border: 1px solid rgba(0,180,216,.3);
+      border-left: 4px solid var(--cyan);
+      border-radius: 8px;
+      padding: 1.6rem 2rem;
+      margin-bottom: 2rem;
+    }
+    .cnsnmm-inner {
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-start;
+    }
+    .cnsnmm-icon {
+      flex-shrink: 0;
+      width: 2.4rem;
+      height: 2.4rem;
+      background: rgba(0,180,216,.15);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+    .cnsnmm-icon svg {
+      width: 1.15rem;
+      height: 1.15rem;
+      fill: var(--cyan);
+    }
+    .cnsnmm-text { flex: 1; }
+    .cnsnmm-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: .6rem;
+    }
+    .cnsnmm-text p {
+      font-size: .97rem;
+      line-height: 1.65;
+      color: var(--neige);
+    }
+    .cnsnmm-text p + p { margin-top: .5rem; }
+    .cnsnmm-text strong { color: var(--blanc); font-weight: 500; }
+    .cnsnmm-link {
+      display: inline-block;
+      margin-top: 1rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: .95rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(0,180,216,.4);
+      padding-bottom: .1rem;
+      transition: border-color .2s, color .2s;
+    }
+    .cnsnmm-link:hover { border-color: var(--cyan); color: #33c5e5; }
+
+    .heberg-cta {
+      margin-top: 1.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      border: 1.5px solid var(--cyan);
+      color: var(--cyan);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: .7rem 1.4rem;
+      border-radius: 4px;
+      transition: background .2s, color .2s;
+    }
+    .heberg-cta:hover { background: var(--cyan); color: var(--bleu); }
+
+    /* ─── DIVIDER ─── */
+    hr.divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,.08);
+      margin: 4rem 0 0;
+    }
+
+    /* ─── SNOW DECORATION ─── */
+    .snow-dots {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .snow-dots span {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      animation: snowfall linear infinite;
+    }
+    @keyframes snowfall {
+      0%   { transform: translateY(-20px) translateX(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: .5; }
+      100% { transform: translateY(110vh) translateX(30px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- subtle snow effect -->
+<div class="snow-dots" aria-hidden="true">
+  <span style="left:8%;width:3px;height:3px;animation-duration:14s;animation-delay:0s;"></span>
+  <span style="left:22%;width:2px;height:2px;animation-duration:18s;animation-delay:3s;"></span>
+  <span style="left:41%;width:4px;height:4px;animation-duration:11s;animation-delay:7s;"></span>
+  <span style="left:63%;width:2px;height:2px;animation-duration:16s;animation-delay:1s;"></span>
+  <span style="left:79%;width:3px;height:3px;animation-duration:13s;animation-delay:9s;"></span>
+  <span style="left:90%;width:2px;height:2px;animation-duration:20s;animation-delay:5s;"></span>
+</div>
+
+<!-- ─── HERO ─── -->
+<header class="hero">
+  <svg class="hero-mountains" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMax meet" aria-hidden="true">
+    <polygon points="0,300 120,80 240,200 340,40 480,220 600,100 700,180 800,60 800,300" fill="white"/>
+  </svg>
+  <div class="hero-badge">Stade Nordique des Tuffes</div>
+  <h1>Venir<br>aux <span>Tuffes</span></h1>
+  <p class="hero-sub">Toutes les informations pour rejoindre le stade nordique, stationner et trouver un hébergement sur la station des Rousses.</p>
+</header>
+
+<!-- ─── CONTENT ─── -->
+<main class="page-content">
+
+  <!-- LOCALISATION -->
+  <section class="section" id="localisation">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      </div>
+      <h2>Localisation &amp; Accès</h2>
+    </div>
+
+    <div class="address-grid">
+      <div class="addr-card">
+        <span class="label">Adresse</span>
+        <div class="value"><strong>Stade Nordique des Tuffes</strong><br>730–732 Route des Tremplins<br>39220 Prémanon, France</div>
+      </div>
+      <div class="addr-card">
+        <span class="label">Situation</span>
+        <div class="value">Entre <strong>Prémanon</strong> et <strong>Les Rousses</strong>, sur les hauteurs du massif du Jura, à <strong>1 417 m</strong> d'altitude.</div>
+      </div>
+      <div class="addr-card">
+        <span class="label">En voiture depuis</span>
+        <div class="value">
+          Genève ~45 min · Lausanne ~55 min<br>
+          Lons-le-Saunier ~1 h · Lyon ~2 h<br>
+          Paris ~4 h 30
+        </div>
+      </div>
+      <div class="addr-card">
+        <span class="label">GPS</span>
+        <div class="value">
+          46.4510° N, 6.0689° E<br>
+          <span style="color:var(--gris);font-size:.9rem;">Entrez « Stade des Tuffes, Prémanon » dans votre GPS ou application de navigation.</span>
+        </div>
+      </div>
+    </div>
+
+    <a class="cta-map" href="https://www.google.fr/maps/dir//46.4510191,6.06889623" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 3L3 10.5l7.66 3.84L17.5 8l-6.34 6.84L15 21z"/></svg>
+      Calculer mon itinéraire
+    </a>
+
+    <!-- Map -->
+    <div class="map-wrapper">
+      <iframe
+        title="Localisation du Stade des Tuffes"
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2766.453!2d6.06889!3d46.45101!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x478c58a295ab87e1%3A0x23f9661d1feda75f!2sNordic%20Stadium%20Tuffes!5e0!3m2!1sfr!2sfr!4v1700000000000"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- PARKING -->
+  <section class="section" id="parking">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 3H6v18h4v-6h3c3.31 0 6-2.69 6-6s-2.69-6-6-6zm.2 8H10V7h3.2c1.1 0 2 .9 2 2s-.9 2-2 2z"/></svg>
+      </div>
+      <h2>Parking</h2>
+    </div>
+
+    <div class="parking-block">
+      <p>
+        Le stade dispose d'un <strong>parking principal (P1)</strong> d'environ <strong>une centaine de places</strong>, situé à <strong>250 m avant l'entrée du stade</strong>. Il se trouve sur la droite de la Route des Tremplins, <strong>en face des locaux techniques de la Sogestar</strong>.
+      </p>
+      <p>
+        Ce parking est accessible librement pour les entraînements, manifestations locales et compétitions régionales. Il permet une arrivée au stade à pied en quelques minutes, le long du chemin d'accès.
+      </p>
+
+      <div class="parking-note">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        <span>
+          <strong>Lors des grands événements</strong> (Coupe du Monde de ski nordique, Championnats de France…), un <strong>dispositif de stationnement spécifique</strong> est mis en place. Des parkings relais et navettes sont organisés par les organisateurs — consultez les informations pratiques propres à chaque événement.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- HÉBERGEMENTS -->
+  <section class="section" id="hebergements">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>
+      </div>
+      <h2>Hébergements</h2>
+    </div>
+
+    <p class="heberg-intro">
+      Pour votre séjour, nous vous recommandons de rechercher un logement sur la <strong>Station des Rousses</strong> et ses villages environnants — tous à courte distance du stade, au cœur du massif jurassien.
+    </p>
+
+    <div class="cnsnmm-block">
+      <div class="cnsnmm-inner">
+        <div class="cnsnmm-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+        </div>
+        <div class="cnsnmm-text">
+          <div class="cnsnmm-title">Sportifs en stage</div>
+          <p>Les athlètes et groupes sportifs en stage au stade des Tuffes ont généralement la possibilité d'être <strong>hébergés directement au Centre National de Ski Nordique et de Moyenne Montagne (CNSNMM)</strong>, qui dispose de ses propres infrastructures d'accueil et de restauration sur site.</p>
+          <p>Pour toute demande de réservation et d'information, rapprochez-vous directement du CNSNMM.</p>
+          <a class="cnsnmm-link" href="https://www.ensm.sports.gouv.fr/accueil-hebergement-restauration-cnsnmm/" target="_blank" rel="noopener">
+            Hébergement &amp; restauration au CNSNMM →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="villages-grid">
+      <div class="village-card">
+        <div class="village-name">Les Rousses</div>
+        <div class="village-type">Station principale · hôtels, résidences, gîtes</div>
+      </div>
+      <div class="village-card">
+        <div class="village-name">Prémanon</div>
+        <div class="village-type">Village du stade · gîtes, chambres d'hôtes</div>
+      </div>
+      <div class="village-card">
+        <div class="village-name">Bois d'Amont</div>
+        <div class="village-type">Village jurassien · gîtes, locations</div>
+      </div>
+      <div class="village-card">
+        <div class="village-name">Lamoura</div>
+        <div class="village-type">Village d'altitude · gîtes, résidences</div>
+      </div>
+    </div>
+
+    <a class="heberg-cta" href="https://www.lesrousses.com/hebergements/" target="_blank" rel="noopener">
+      Rechercher un hébergement sur la station →
+    </a>
+  </section>
+
+</main>
+
+</body>
+</html>
