@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  PAGE ADMIN — STADE DES TUFFES                                  ║
+  ║  Accès réservé — ne pas lier publiquement                       ║
+  ╠══════════════════════════════════════════════════════════════════╣
+  ║  MISE EN PLACE (une seule fois) :                               ║
+  ║                                                                  ║
+  ║  1. Créer un compte admin dans Supabase :                       ║
+  ║     Dashboard → Authentication → Users → Invite user           ║
+  ║     → entrer cinqcibles@gmail.com                               ║
+  ║                                                                  ║
+  ║  2. Exécuter ce SQL dans Supabase SQL Editor :                  ║
+  ║                                                                  ║
+  ║  -- Permettre aux admins connectés de tout voir/modifier        ║
+  ║  CREATE POLICY "auth_select_all" ON events                      ║
+  ║    FOR SELECT TO authenticated USING (true);                    ║
+  ║                                                                  ║
+  ║  CREATE POLICY "auth_update" ON events                          ║
+  ║    FOR UPDATE TO authenticated USING (true) WITH CHECK (true);  ║
+  ║                                                                  ║
+  ║  CREATE POLICY "auth_delete" ON events                          ║
+  ║    FOR DELETE TO authenticated USING (true) USING (true);       ║
+  ║                                                                  ║
+  ║  -- Colonne email du soumetteur (optionnel, si besoin plus tard) ║
+  ║  ALTER TABLE events ADD COLUMN IF NOT EXISTS submitter_email text; ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Stade des Tuffes</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    :root {
+      --ice: #E8F4FF; --frost: #B8D9F5; --sky: #4BA3D9; --deep: #1B5E8A;
+      --night: #0D2B3E; --snow: #F5F9FF; --accent: #E8302A;
+      --accent2: #F5A623; --muted: #6B9DB8; --green: #2ECC71;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Barlow', sans-serif; font-weight: 400; background: #0a1e2e; color: var(--snow); min-height: 100vh; }
+
+    /* ── TOPBAR ─────────────────────────────────────────────── */
+    .topbar {
+      background: #0D2B3E; border-bottom: 1px solid rgba(75,163,217,.2);
+      padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 2px; text-transform: uppercase; color: white; }
+    .topbar-logo span { color: var(--sky); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .admin-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; background: rgba(75,163,217,.15); color: var(--sky); border: 1px solid rgba(75,163,217,.3); padding: 3px 9px; border-radius: 2px; }
+    .btn-logout { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 13px; background: transparent; border: 1px solid rgba(255,255,255,.2); color: var(--frost); border-radius: 2px; cursor: pointer; transition: all .15s; }
+    .btn-logout:hover { border-color: var(--accent); color: #ff8080; }
+
+    /* ── LOGIN ──────────────────────────────────────────────── */
+    .login-wrap {
+      min-height: calc(100vh - 57px); display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .login-card {
+      background: #0F2F47; border: 1px solid rgba(75,163,217,.25); border-radius: 8px;
+      padding: 36px 32px; width: 100%; max-width: 380px;
+    }
+    .login-pretitle { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--sky); margin-bottom: 6px; }
+    .login-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; color: white; margin-bottom: 24px; }
+    .login-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+    .login-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--frost); }
+    .login-input {
+      background: rgba(13,43,62,.8); border: 1px solid rgba(75,163,217,.28); border-radius: 3px;
+      color: var(--snow); font-family: 'Barlow', sans-serif; font-size: 14px; padding: 9px 12px;
+      outline: none; width: 100%; transition: border-color .15s;
+    }
+    .login-input:focus { border-color: var(--sky); }
+    .btn-login {
+      width: 100%; margin-top: 8px; padding: 11px; background: var(--sky); border: none;
+      border-radius: 3px; color: white; font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-login:hover { opacity: .85; }
+    .login-error { font-size: 12px; color: #ff8080; margin-top: 10px; display: none; }
+
+    /* ── MAIN CONTENT ───────────────────────────────────────── */
+    .main { padding: 28px 24px; max-width: 1200px; margin: 0 auto; }
+    .page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .page-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 28px; text-transform: uppercase; letter-spacing: 1px; color: white; }
+    .count-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; background: rgba(245,166,35,.15); color: var(--accent2); border: 1px solid rgba(245,166,35,.3); padding: 4px 11px; border-radius: 2px; }
+    .btn-refresh { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px; background: transparent; border: 1px solid rgba(75,163,217,.3); color: var(--sky); border-radius: 2px; cursor: pointer; margin-left: auto; transition: all .15s; }
+    .btn-refresh:hover { background: rgba(75,163,217,.12); }
+
+    /* ── TABS ───────────────────────────────────────────────── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 22px; }
+    .tab {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 16px;
+      border: 1px solid rgba(75,163,217,.22); border-radius: 2px; background: transparent;
+      color: var(--frost); cursor: pointer; transition: all .15s;
+    }
+    .tab:hover { background: rgba(75,163,217,.12); }
+    .tab.active { background: var(--sky); border-color: var(--sky); color: white; }
+
+    /* ── EVENT CARDS ────────────────────────────────────────── */
+    .events-list { display: flex; flex-direction: column; gap: 14px; }
+    .ev-card {
+      background: rgba(27,94,138,.18); border: 1px solid rgba(75,163,217,.2);
+      border-radius: 6px; overflow: hidden;
+    }
+    .ev-card.pending { border-left: 4px solid var(--accent2); }
+    .ev-card.published { border-left: 4px solid var(--green); }
+    .ev-card.rejected { border-left: 4px solid rgba(231,76,60,.5); opacity: .6; }
+
+    .ev-head {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 16px; flex-wrap: wrap;
+    }
+    .ev-date-block { text-align: center; min-width: 46px; flex-shrink: 0; }
+    .ev-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; line-height: 1; color: white; }
+    .ev-month { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+    .ev-info { flex: 1; min-width: 200px; }
+    .ev-sport { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--sky); margin-bottom: 3px; }
+    .ev-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; color: white; line-height: 1.2; margin-bottom: 6px; }
+    .ev-meta { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .ev-meta a { color: var(--sky); word-break: break-all; }
+    .ev-meta strong { color: var(--frost); font-weight: 500; }
+    .ev-actions { display: flex; gap: 7px; align-items: flex-start; flex-wrap: wrap; flex-shrink: 0; }
+    .btn-publish {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px;
+      background: var(--green); border: none; color: #0a1e2e; border-radius: 2px; cursor: pointer; transition: opacity .15s;
+    }
+    .btn-publish:hover { opacity: .85; }
+    .btn-edit {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px;
+      background: transparent; border: 1px solid rgba(75,163,217,.4); color: var(--sky);
+      border-radius: 2px; cursor: pointer; transition: all .15s;
+    }
+    .btn-edit:hover { background: rgba(75,163,217,.12); }
+    .btn-reject {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px;
+      background: transparent; border: 1px solid rgba(231,76,60,.3); color: #e74c3c;
+      border-radius: 2px; cursor: pointer; transition: all .15s;
+    }
+    .btn-reject:hover { background: rgba(231,76,60,.1); }
+    .btn-unpublish {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px;
+      background: transparent; border: 1px solid rgba(245,166,35,.3); color: var(--accent2);
+      border-radius: 2px; cursor: pointer; transition: all .15s;
+    }
+    .btn-unpublish:hover { background: rgba(245,166,35,.08); }
+
+    /* ── EDIT PANEL ─────────────────────────────────────────── */
+    .ev-edit-panel {
+      border-top: 1px solid rgba(75,163,217,.15);
+      padding: 16px 16px 20px;
+      display: none;
+    }
+    .ev-edit-panel.open { display: block; }
+    .edit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 12px; }
+    .edit-group { display: flex; flex-direction: column; gap: 4px; }
+    .edit-group.full { grid-column: 1 / -1; }
+    .edit-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--frost); }
+    .edit-input, .edit-select, .edit-textarea {
+      background: rgba(13,43,62,.9); border: 1px solid rgba(75,163,217,.28); border-radius: 3px;
+      color: var(--snow); font-family: 'Barlow', sans-serif; font-size: 13px; padding: 7px 10px;
+      outline: none; width: 100%; transition: border-color .15s;
+    }
+    .edit-input:focus, .edit-select:focus, .edit-textarea:focus { border-color: var(--sky); }
+    .edit-select option { background: #0F2F47; }
+    .edit-textarea { resize: vertical; min-height: 60px; }
+    .radio-row { display: flex; gap: 7px; flex-wrap: wrap; }
+    .radio-opt-sm {
+      display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--frost);
+      cursor: pointer; padding: 5px 10px; border: 1px solid rgba(75,163,217,.24);
+      border-radius: 3px; transition: all .15s; user-select: none;
+    }
+    .radio-opt-sm input { display: none; }
+    .radio-opt-sm.sel { background: rgba(75,163,217,.15); border-color: var(--sky); color: white; }
+    .edit-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-save {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 18px;
+      background: var(--sky); border: none; color: white; border-radius: 2px; cursor: pointer; transition: opacity .15s;
+    }
+    .btn-save:hover { opacity: .85; }
+    .btn-cancel-edit {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 16px;
+      background: transparent; border: 1px solid rgba(75,163,217,.25); color: var(--frost);
+      border-radius: 2px; cursor: pointer;
+    }
+
+    /* ── STATES ─────────────────────────────────────────────── */
+    .state-msg { padding: 48px 24px; text-align: center; color: var(--muted); font-style: italic; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(75,163,217,.3); border-top-color: var(--sky); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: #1B5E8A; border: 1px solid rgba(75,163,217,.4); border-radius: 4px;
+      padding: 12px 18px; font-size: 13px; color: white; font-weight: 500;
+      transform: translateY(80px); opacity: 0; transition: all .25s; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #1a4a2e; border-color: rgba(46,204,113,.4); }
+    .toast.error { background: #4a1a1a; border-color: rgba(231,76,60,.4); }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">Les Tuffes <span>Admin</span></div>
+  <div class="topbar-right">
+    <span class="admin-badge" id="admin-email-badge" style="display:none;"></span>
+    <button class="btn-logout" id="btn-logout" style="display:none;" onclick="logout()">Déconnexion</button>
+    <a href="index.html" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;">← Site</a>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-pretitle">Espace administration</div>
+    <div class="login-title">Connexion</div>
+    <div class="login-group">
+      <label class="login-label">Adresse e-mail</label>
+      <input class="login-input" type="email" id="login-email" placeholder="admin@exemple.fr" autocomplete="email">
+    </div>
+    <div class="login-group">
+      <label class="login-label">Mot de passe</label>
+      <input class="login-input" type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Se connecter →</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- MAIN (masqué jusqu'à connexion) -->
+<div class="main" id="main-wrap" style="display:none;">
+  <div class="page-header">
+    <h1 class="page-title">Événements</h1>
+    <span class="count-badge" id="pending-count"></span>
+    <button class="btn-refresh" onclick="loadEvents()">↺ Actualiser</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="pending" onclick="switchTab('pending',this)">En attente</button>
+    <button class="tab" data-tab="published" onclick="switchTab('published',this)">Publiés</button>
+    <button class="tab" data-tab="all" onclick="switchTab('all',this)">Tous</button>
+  </div>
+
+  <div class="events-list" id="events-list">
+    <div class="state-msg"><span class="spinner"></span> Chargement…</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================================
+// SUPABASE
+// ================================================================
+const SUPABASE_URL      = 'https://arkbrvzacbereyukqfte.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFya2JydnphY2JlcmV5dWtxZnRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDg3ODUsImV4cCI6MjA5MDUyNDc4NX0.quPd-OGwu0HYjyvbdcdELlMvNieIBkyOuJHbC3TcM9E';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const MONTHS_FR = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+let currentTab = 'pending';
+let allEvents  = [];
+
+// ================================================================
+// AUTH
+// ================================================================
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd   = document.getElementById('login-pwd').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+  if (error) {
+    errEl.textContent = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
+    errEl.style.display = 'block';
+    return;
+  }
+  showApp(email);
+}
+
+// Allow login on Enter key
+document.getElementById('login-pwd').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+async function logout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+function showApp(email) {
+  document.getElementById('login-wrap').style.display  = 'none';
+  document.getElementById('main-wrap').style.display   = 'block';
+  document.getElementById('btn-logout').style.display  = 'inline-block';
+  const badge = document.getElementById('admin-email-badge');
+  badge.textContent = email;
+  badge.style.display = 'inline-block';
+  loadEvents();
+}
+
+// Restore session on reload
+sb.auth.getSession().then(({ data }) => {
+  if (data.session) showApp(data.session.user.email);
+});
+
+// ================================================================
+// LOAD EVENTS
+// ================================================================
+async function loadEvents() {
+  document.getElementById('events-list').innerHTML =
+    '<div class="state-msg"><span class="spinner"></span> Chargement…</div>';
+  try {
+    const query = sb
+      .from('events')
+      .select('id, title, sport, date_start, date_end, public_access, has_catering, notes, source_url, source_name, source_type, status')
+      .order('date_start', { ascending: false });
+
+    const { data, error } = await query;
+    if (error) throw error;
+    allEvents = data || [];
+    renderTab(currentTab);
+  } catch (err) {
+    document.getElementById('events-list').innerHTML =
+      `<div class="state-msg">Erreur de chargement. Assurez-vous que les politiques RLS sont en place.<br><small style="color:#ff8080;">${err.message}</small></div>`;
+  }
+}
+
+function renderTab(tab) {
+  const list = allEvents.filter(e =>
+    tab === 'all' ? true : e.status === tab
+  );
+  const pending = allEvents.filter(e => e.status === 'pending').length;
+  document.getElementById('pending-count').textContent =
+    `${pending} en attente`;
+
+  const el = document.getElementById('events-list');
+  if (!list.length) {
+    el.innerHTML = '<div class="state-msg">Aucun événement dans cette catégorie.</div>';
+    return;
+  }
+  el.innerHTML = list.map(ev => buildCard(ev)).join('');
+  // Init radios
+  el.querySelectorAll('.radio-opt-sm').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const nm = this.querySelector('input').name;
+      el.querySelectorAll(`input[name="${nm}"]`).forEach(r => r.closest('.radio-opt-sm').classList.remove('sel'));
+      this.classList.add('sel');
+      this.querySelector('input').checked = true;
+    });
+  });
+}
+
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderTab(tab);
+}
+
+// ================================================================
+// BUILD CARD
+// ================================================================
+function buildCard(ev) {
+  const d = ev.date_start ? new Date(ev.date_start + 'T12:00:00') : null;
+  const day   = d ? String(d.getDate()).padStart(2,'0') : '?';
+  const month = d ? MONTHS_FR[d.getMonth()] : '?';
+  const dateEnd = ev.date_end && ev.date_end !== ev.date_start ? ` → ${ev.date_end}` : '';
+
+  const statusBadge =
+    ev.status === 'pending'   ? `<span style="color:${CSS_VAR_ACCENT2};font-weight:600;">● En attente</span>` :
+    ev.status === 'published' ? `<span style="color:#2ECC71;font-weight:600;">✓ Publié</span>` :
+    `<span style="color:#e74c3c;font-weight:600;">✗ Rejeté</span>`;
+
+  const pubTxt = ev.public_access === true ? 'Oui' : ev.public_access === false ? 'Non' : 'Inconnu';
+  const resTxt = ev.has_catering  === true ? 'Oui' : ev.has_catering  === false ? 'Non' : 'Inconnu';
+
+  const pubVal = ev.public_access === true ? 'true' : ev.public_access === false ? 'false' : 'null';
+  const resVal = ev.has_catering  === true ? 'true' : ev.has_catering  === false ? 'false' : 'null';
+
+  const actionsBtns = ev.status === 'pending'
+    ? `<button class="btn-publish" onclick="publishEvent(${ev.id})">✓ Publier</button>
+       <button class="btn-edit" onclick="toggleEdit(${ev.id})">✎ Modifier</button>
+       <button class="btn-reject" onclick="rejectEvent(${ev.id})">✗ Rejeter</button>`
+    : ev.status === 'published'
+    ? `<button class="btn-edit" onclick="toggleEdit(${ev.id})">✎ Modifier</button>
+       <button class="btn-unpublish" onclick="unpublishEvent(${ev.id})">↩ Dépublier</button>
+       <button class="btn-reject" onclick="deleteEvent(${ev.id})">🗑 Supprimer</button>`
+    : `<button class="btn-publish" onclick="publishEvent(${ev.id})">↩ Republier</button>
+       <button class="btn-reject" onclick="deleteEvent(${ev.id})">🗑 Supprimer</button>`;
+
+  return `
+  <div class="ev-card ${ev.status}" id="card-${ev.id}">
+    <div class="ev-head">
+      <div class="ev-date-block">
+        <div class="ev-day">${day}</div>
+        <div class="ev-month">${month}</div>
+      </div>
+      <div class="ev-info">
+        <div class="ev-sport">${ev.sport || '—'}</div>
+        <div class="ev-title">${escHtml(ev.title)}</div>
+        <div class="ev-meta">
+          ${statusBadge} &nbsp;·&nbsp;
+          <strong>Dates :</strong> ${ev.date_start || '?'}${dateEnd} &nbsp;·&nbsp;
+          <strong>Public :</strong> ${pubTxt} &nbsp;·&nbsp;
+          <strong>Restauration :</strong> ${resTxt}
+          ${ev.source_url ? `<br><strong>Source :</strong> <a href="${escHtml(ev.source_url)}" target="_blank" rel="noopener">${escHtml(ev.source_url)}</a>` : ''}
+          ${ev.notes ? `<br><strong>Notes :</strong> ${escHtml(ev.notes)}` : ''}
+        </div>
+      </div>
+      <div class="ev-actions">${actionsBtns}</div>
+    </div>
+
+    <!-- Panneau d'édition inline -->
+    <div class="ev-edit-panel" id="edit-${ev.id}">
+      <div class="edit-grid">
+        <div class="edit-group full">
+          <label class="edit-label">Nom de l'événement</label>
+          <input class="edit-input" id="e-title-${ev.id}" value="${escHtml(ev.title)}" type="text">
+        </div>
+        <div class="edit-group">
+          <label class="edit-label">Date de début</label>
+          <input class="edit-input" id="e-start-${ev.id}" type="date" value="${ev.date_start || ''}">
+        </div>
+        <div class="edit-group">
+          <label class="edit-label">Date de fin</label>
+          <input class="edit-input" id="e-end-${ev.id}" type="date" value="${ev.date_end || ''}">
+        </div>
+        <div class="edit-group">
+          <label class="edit-label">Discipline</label>
+          <select class="edit-select" id="e-sport-${ev.id}">
+            ${['Ski de fond','Biathlon','Combiné nordique','Saut à ski','Autre / Plusieurs']
+              .map(s => `<option${ev.sport===s?' selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="edit-group">
+          <label class="edit-label">Accès public</label>
+          <div class="radio-row">
+            <label class="radio-opt-sm${pubVal==='true'?' sel':''}"><input type="radio" name="ep-${ev.id}" value="true" ${pubVal==='true'?'checked':''}>Oui</label>
+            <label class="radio-opt-sm${pubVal==='false'?' sel':''}"><input type="radio" name="ep-${ev.id}" value="false" ${pubVal==='false'?'checked':''}>Non</label>
+            <label class="radio-opt-sm${pubVal==='null'?' sel':''}"><input type="radio" name="ep-${ev.id}" value="null" ${pubVal==='null'||pubVal===''?'checked':''}>Inconnu</label>
+          </div>
+        </div>
+        <div class="edit-group">
+          <label class="edit-label">Restauration</label>
+          <div class="radio-row">
+            <label class="radio-opt-sm${resVal==='true'?' sel':''}"><input type="radio" name="er-${ev.id}" value="true" ${resVal==='true'?'checked':''}>Oui</label>
+            <label class="radio-opt-sm${resVal==='false'?' sel':''}"><input type="radio" name="er-${ev.id}" value="false" ${resVal==='false'?'checked':''}>Non</label>
+            <label class="radio-opt-sm${resVal==='null'?' sel':''}"><input type="radio" name="er-${ev.id}" value="null" ${resVal==='null'||resVal===''?'checked':''}>Inconnu</label>
+          </div>
+        </div>
+        <div class="edit-group full">
+          <label class="edit-label">Lien source</label>
+          <input class="edit-input" id="e-url-${ev.id}" type="url" value="${escHtml(ev.source_url||'')}">
+        </div>
+        <div class="edit-group full">
+          <label class="edit-label">Notes / Informations</label>
+          <textarea class="edit-textarea" id="e-notes-${ev.id}">${escHtml(ev.notes||'')}</textarea>
+        </div>
+      </div>
+      <div class="edit-actions">
+        <button class="btn-save" onclick="saveEvent(${ev.id})">Enregistrer</button>
+        <button class="btn-cancel-edit" onclick="toggleEdit(${ev.id})">Annuler</button>
+        ${ev.status === 'pending'
+          ? `<button class="btn-publish" style="margin-left:auto;" onclick="saveAndPublish(${ev.id})">Enregistrer &amp; Publier →</button>`
+          : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+const CSS_VAR_ACCENT2 = '#F5A623';
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleEdit(id) {
+  const panel = document.getElementById(`edit-${id}`);
+  panel.classList.toggle('open');
+}
+
+// ================================================================
+// ACTIONS
+// ================================================================
+function getRadioVal(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  if (!el) return null;
+  if (el.value === 'true')  return true;
+  if (el.value === 'false') return false;
+  return null;
+}
+
+async function publishEvent(id) {
+  await updateStatus(id, 'published');
+}
+async function unpublishEvent(id) {
+  await updateStatus(id, 'pending');
+}
+async function rejectEvent(id) {
+  if (!confirm('Rejeter cet événement ? Il restera en base avec le statut "rejected".')) return;
+  await updateStatus(id, 'rejected');
+}
+async function deleteEvent(id) {
+  if (!confirm('Supprimer définitivement cet événement ?')) return;
+  const { error } = await sb.from('events').delete().eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  showToast('Événement supprimé.', 'success');
+  allEvents = allEvents.filter(e => e.id !== id);
+  renderTab(currentTab);
+}
+
+async function updateStatus(id, status) {
+  const { error } = await sb.from('events').update({ status }).eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  const labels = { published: 'Publié ✓', pending: 'Dépublié', rejected: 'Rejeté' };
+  showToast(labels[status] || 'Mis à jour.', 'success');
+  const ev = allEvents.find(e => e.id === id);
+  if (ev) ev.status = status;
+  renderTab(currentTab);
+}
+
+async function saveEvent(id) {
+  const payload = buildPayload(id);
+  const { error } = await sb.from('events').update(payload).eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  showToast('Modifications enregistrées.', 'success');
+  const ev = allEvents.find(e => e.id === id);
+  if (ev) Object.assign(ev, payload);
+  renderTab(currentTab);
+}
+
+async function saveAndPublish(id) {
+  const payload = { ...buildPayload(id), status: 'published' };
+  const { error } = await sb.from('events').update(payload).eq('id', id);
+  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  showToast('Enregistré et publié ✓', 'success');
+  const ev = allEvents.find(e => e.id === id);
+  if (ev) Object.assign(ev, payload);
+  renderTab(currentTab);
+}
+
+function buildPayload(id) {
+  return {
+    title:         document.getElementById(`e-title-${id}`).value.trim(),
+    date_start:    document.getElementById(`e-start-${id}`).value || null,
+    date_end:      document.getElementById(`e-end-${id}`).value   || null,
+    sport:         document.getElementById(`e-sport-${id}`).value,
+    public_access: getRadioVal(`ep-${id}`),
+    has_catering:  getRadioVal(`er-${id}`),
+    source_url:    document.getElementById(`e-url-${id}`).value.trim()   || null,
+    notes:         document.getElementById(`e-notes-${id}`).value.trim() || null,
+  };
+}
+
+// ================================================================
+// TOAST
+// ================================================================
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
+}
+</script>
+</body>
+</html>

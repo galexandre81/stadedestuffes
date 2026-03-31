@@ -297,6 +297,8 @@
       cursor: pointer; transition: opacity .15s;
     }
     .btn-submit:hover { opacity: .85; }
+    .form-hint { font-size: 11px; color: var(--muted); margin-top: 3px; font-style: italic; line-height: 1.4; }
+
     .form-success {
       padding: 24px; text-align: center; display: none;
     }
@@ -616,6 +618,11 @@
       <div class="form-group">
         <label class="form-label">Lien web (source officielle)</label>
         <input class="form-input" type="url" id="f-link" placeholder="https://…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Votre adresse e-mail</label>
+        <input class="form-input" type="email" id="f-email" placeholder="votre@email.fr">
+        <span class="form-hint">Pour que nous puissions vous recontacter si besoin. Votre adresse ne sera jamais visible sur le site.</span>
       </div>
       <div class="form-group">
         <label class="form-label">Autres informations</label>
@@ -973,6 +980,30 @@ async function submitForm() {
   try {
     const { error } = await sb.from('events').insert([payload]);
     if (error) throw error;
+
+    // Notification email vers l'admin (FormSubmit.co — 1re utilisation : cliquez le lien de vérification envoyé à cinqcibles@gmail.com)
+    const emailContact = document.getElementById('f-email').value.trim();
+    const pubVal = getRadioValue('pub');
+    const resVal = getRadioValue('res');
+    fetch('https://formsubmit.co/ajax/cinqcibles@gmail.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: `🎿 Nouvel événement à valider — ${name}`,
+        _template: 'table',
+        'Événement':       name,
+        'Discipline':      sport,
+        'Date de début':   dateStart,
+        'Date de fin':     document.getElementById('f-date-end').value || '—',
+        'Accès public':    pubVal === true ? 'Oui' : pubVal === false ? 'Non' : 'Inconnu',
+        'Restauration':    resVal === true ? 'Oui' : resVal === false ? 'Non' : 'Inconnu',
+        'Lien source':     document.getElementById('f-link').value.trim() || '—',
+        'Informations':    document.getElementById('f-other').value.trim() || '—',
+        'Email contact':   emailContact || '—',
+        'Lien admin':      'https://stadedestuffes.fr/admin.html',
+      }),
+    }).catch(() => {}); // Silencieux si email échoue — l'event est quand même enregistré
+
     document.getElementById('form-fields').style.display = 'none';
     document.getElementById('form-success').style.display = 'block';
   } catch (err) {
