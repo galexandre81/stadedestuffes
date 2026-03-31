@@ -360,6 +360,39 @@
       text-decoration: none; transition: background .15s, color .15s;
     }
     .btn-voir-plus:hover { background: var(--sky); color: white; }
+    /* ---- UPCOMING / PAST HEADERS ---- */
+    .sub-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px; margin-top: 4px;
+    }
+    .sub-title {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    }
+    .sub-line { flex: 1; height: 1px; background: rgba(75,163,217,.14); }
+
+    /* ---- PAST TOGGLE ---- */
+    .past-toggle {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      background: rgba(27,94,138,.12); border: 1px solid rgba(75,163,217,.16);
+      border-radius: 4px; padding: 13px 16px; cursor: pointer; margin-top: 20px;
+      color: var(--frost); text-align: left; transition: background .15s;
+    }
+    .past-toggle:hover { background: rgba(27,94,138,.24); border-color: rgba(75,163,217,.3); }
+    .past-toggle-label {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--frost);
+    }
+    .past-toggle-count {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+      color: var(--muted); letter-spacing: 1px;
+    }
+    .past-toggle-chevron {
+      margin-left: auto; font-size: 11px; color: var(--muted);
+      transition: transform .22s;
+    }
+    .past-toggle.open .past-toggle-chevron { transform: rotate(180deg); }
+    .past-grid-wrapper { padding-top: 12px; }
+
     @media (max-width: 520px) {
       .form-row { grid-template-columns: 1fr; }
       .cta-strip { flex-direction: column; }
@@ -438,8 +471,25 @@
     <button class="filter-btn" data-filter="Saut à ski">Saut à ski</button>
   </div>
 
+  <!-- À VENIR -->
+  <div class="sub-header">
+    <span class="sub-title">À venir</span>
+    <div class="sub-line"></div>
+  </div>
   <div class="events-grid" id="events-grid">
     <div class="state-msg"><span class="spinner"></span> Chargement des événements…</div>
+  </div>
+
+  <!-- PASSÉES (repliées par défaut) -->
+  <div id="past-section" style="display:none;">
+    <button class="past-toggle" id="past-toggle" onclick="togglePast()">
+      <span class="past-toggle-label">Compétitions passées</span>
+      <span class="past-toggle-count" id="past-count"></span>
+      <span class="past-toggle-chevron" id="past-chevron">▼</span>
+    </button>
+    <div class="past-grid-wrapper" id="past-wrapper" style="display:none;">
+      <div class="events-grid" id="past-grid"></div>
+    </div>
   </div>
 
   <div class="legend">
@@ -451,15 +501,6 @@
       <span class="legend-item"><span class="legend-dot" style="background:#95A5A6"></span>Sans restauration</span>
     </div>
   </div>
-</div>
-
-<!-- CTA -->
-<div class="cta-strip">
-  <div>
-    <div class="cta-text">Venir aux Tuffes</div>
-    <div class="cta-sub">Toutes les infos pratiques : accès, parking, hébergement</div>
-  </div>
-  <a class="cta-btn" href="venir-aux-tuffes.html">Préparer ma venue →</a>
 </div>
 
 <!-- DERNIÈRES ACTUALITÉS -->
@@ -475,6 +516,15 @@
   <div style="text-align:center;">
     <a href="articles.html" class="btn-voir-plus">Voir toutes les actualités →</a>
   </div>
+</div>
+
+<!-- CTA VENIR AUX TUFFES -->
+<div class="cta-strip">
+  <div>
+    <div class="cta-text">Venir aux Tuffes</div>
+    <div class="cta-sub">Toutes les infos pratiques : accès, parking, hébergement</div>
+  </div>
+  <a class="cta-btn" href="venir-aux-tuffes.html">Préparer ma venue →</a>
 </div>
 
 <!-- DETAIL MODAL -->
@@ -705,15 +755,39 @@ function buildCard(ev) {
 }
 
 function renderEvents(events) {
-  const grid = document.getElementById('events-grid');
+  const upcoming = events.filter(e => dateStatus(e.date_start, e.date_end) !== 'past');
+  const past     = events.filter(e => dateStatus(e.date_start, e.date_end) === 'past')
+                         .sort((a, b) => new Date(b.date_start) - new Date(a.date_start));
+
+  // ---- À venir ----
+  const grid  = document.getElementById('events-grid');
   const count = document.getElementById('event-count');
-  if (!events.length) {
-    grid.innerHTML = '<div class="state-msg">Aucun événement trouvé pour ce filtre.</div>';
-    count.textContent = '0 événement';
-    return;
+  if (!upcoming.length) {
+    grid.innerHTML = '<div class="state-msg">Aucune compétition à venir pour ce filtre.</div>';
+    count.textContent = '0 à venir';
+  } else {
+    count.textContent = `${upcoming.length} à venir`;
+    grid.innerHTML = upcoming.map(buildCard).join('');
   }
-  count.textContent = `${events.length} événement${events.length>1?'s':''}`;
-  grid.innerHTML = events.map(buildCard).join('');
+
+  // ---- Passées ----
+  const pastSection = document.getElementById('past-section');
+  if (!past.length) {
+    pastSection.style.display = 'none';
+  } else {
+    pastSection.style.display = 'block';
+    document.getElementById('past-count').textContent =
+      `— ${past.length} compétition${past.length > 1 ? 's' : ''}`;
+    document.getElementById('past-grid').innerHTML = past.map(buildCard).join('');
+  }
+}
+
+function togglePast() {
+  const wrapper = document.getElementById('past-wrapper');
+  const btn     = document.getElementById('past-toggle');
+  const isOpen  = wrapper.style.display !== 'none';
+  wrapper.style.display = isOpen ? 'none' : 'block';
+  btn.classList.toggle('open', !isOpen);
 }
 
 // ================================================================
