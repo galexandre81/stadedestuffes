@@ -6,24 +6,21 @@
   ╠══════════════════════════════════════════════════════════════════╣
   ║  MISE EN PLACE (une seule fois) :                               ║
   ║                                                                  ║
-  ║  1. Créer un compte admin dans Supabase :                       ║
-  ║     Dashboard → Authentication → Users → Invite user           ║
-  ║     → entrer cinqcibles@gmail.com                               ║
+  ║  1. Changer ADMIN_PASSWORD ci-dessous par votre mot de passe    ║
   ║                                                                  ║
-  ║  2. Exécuter ce SQL dans Supabase SQL Editor :                  ║
+  ║  2. Exécuter ce SQL dans Supabase → SQL Editor :                ║
   ║                                                                  ║
-  ║  -- Permettre aux admins connectés de tout voir/modifier        ║
-  ║  CREATE POLICY "auth_select_all" ON events                      ║
-  ║    FOR SELECT TO authenticated USING (true);                    ║
+  ║  CREATE POLICY "anon_select_all" ON events                      ║
+  ║    FOR SELECT TO anon USING (true);                             ║
   ║                                                                  ║
-  ║  CREATE POLICY "auth_update" ON events                          ║
-  ║    FOR UPDATE TO authenticated USING (true) WITH CHECK (true);  ║
+  ║  CREATE POLICY "anon_update_all" ON events                      ║
+  ║    FOR UPDATE TO anon USING (true) WITH CHECK (true);           ║
   ║                                                                  ║
-  ║  CREATE POLICY "auth_delete" ON events                          ║
-  ║    FOR DELETE TO authenticated USING (true) USING (true);       ║
+  ║  CREATE POLICY "anon_delete_all" ON events                      ║
+  ║    FOR DELETE TO anon USING (true);                             ║
   ║                                                                  ║
-  ║  -- Colonne email du soumetteur (optionnel, si besoin plus tard) ║
-  ║  ALTER TABLE events ADD COLUMN IF NOT EXISTS submitter_email text; ║
+  ║  Si erreur "policy already exists", exécutez d'abord :         ║
+  ║  DROP POLICY IF EXISTS "anon_select_all" ON events;             ║
   ╚══════════════════════════════════════════════════════════════════╝
 -->
 <html lang="fr">
@@ -64,7 +61,7 @@
     }
     .login-card {
       background: #0F2F47; border: 1px solid rgba(75,163,217,.25); border-radius: 8px;
-      padding: 36px 32px; width: 100%; max-width: 380px;
+      padding: 36px 32px; width: 100%; max-width: 360px;
     }
     .login-pretitle { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--sky); margin-bottom: 6px; }
     .login-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; color: white; margin-bottom: 24px; }
@@ -83,7 +80,7 @@
       cursor: pointer; transition: opacity .15s;
     }
     .btn-login:hover { opacity: .85; }
-    .login-error { font-size: 12px; color: #ff8080; margin-top: 10px; display: none; }
+    .login-error { font-size: 12px; color: #ff8080; margin-top: 10px; display: none; padding: 8px 10px; background: rgba(231,76,60,.1); border-radius: 3px; border: 1px solid rgba(231,76,60,.25); }
 
     /* ── MAIN CONTENT ───────────────────────────────────────── */
     .main { padding: 28px 24px; max-width: 1200px; margin: 0 auto; }
@@ -106,62 +103,34 @@
 
     /* ── EVENT CARDS ────────────────────────────────────────── */
     .events-list { display: flex; flex-direction: column; gap: 14px; }
-    .ev-card {
-      background: rgba(27,94,138,.18); border: 1px solid rgba(75,163,217,.2);
-      border-radius: 6px; overflow: hidden;
-    }
-    .ev-card.pending { border-left: 4px solid var(--accent2); }
+    .ev-card { background: rgba(27,94,138,.18); border: 1px solid rgba(75,163,217,.2); border-radius: 6px; overflow: hidden; }
+    .ev-card.pending   { border-left: 4px solid var(--accent2); }
     .ev-card.published { border-left: 4px solid var(--green); }
-    .ev-card.rejected { border-left: 4px solid rgba(231,76,60,.5); opacity: .6; }
+    .ev-card.rejected  { border-left: 4px solid rgba(231,76,60,.5); opacity: .6; }
 
-    .ev-head {
-      display: flex; align-items: flex-start; gap: 14px;
-      padding: 14px 16px; flex-wrap: wrap;
-    }
+    .ev-head { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; flex-wrap: wrap; }
     .ev-date-block { text-align: center; min-width: 46px; flex-shrink: 0; }
-    .ev-day { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; line-height: 1; color: white; }
+    .ev-day   { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; line-height: 1; color: white; }
     .ev-month { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
-    .ev-info { flex: 1; min-width: 200px; }
+    .ev-info  { flex: 1; min-width: 200px; }
     .ev-sport { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--sky); margin-bottom: 3px; }
     .ev-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; color: white; line-height: 1.2; margin-bottom: 6px; }
-    .ev-meta { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .ev-meta  { font-size: 12px; color: var(--muted); line-height: 1.7; }
     .ev-meta a { color: var(--sky); word-break: break-all; }
     .ev-meta strong { color: var(--frost); font-weight: 500; }
     .ev-actions { display: flex; gap: 7px; align-items: flex-start; flex-wrap: wrap; flex-shrink: 0; }
-    .btn-publish {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px;
-      background: var(--green); border: none; color: #0a1e2e; border-radius: 2px; cursor: pointer; transition: opacity .15s;
-    }
+
+    .btn-publish { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px; background: var(--green); border: none; color: #0a1e2e; border-radius: 2px; cursor: pointer; transition: opacity .15s; }
     .btn-publish:hover { opacity: .85; }
-    .btn-edit {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px;
-      background: transparent; border: 1px solid rgba(75,163,217,.4); color: var(--sky);
-      border-radius: 2px; cursor: pointer; transition: all .15s;
-    }
+    .btn-edit { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px; background: transparent; border: 1px solid rgba(75,163,217,.4); color: var(--sky); border-radius: 2px; cursor: pointer; transition: all .15s; }
     .btn-edit:hover { background: rgba(75,163,217,.12); }
-    .btn-reject {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px;
-      background: transparent; border: 1px solid rgba(231,76,60,.3); color: #e74c3c;
-      border-radius: 2px; cursor: pointer; transition: all .15s;
-    }
+    .btn-reject { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px; background: transparent; border: 1px solid rgba(231,76,60,.3); color: #e74c3c; border-radius: 2px; cursor: pointer; transition: all .15s; }
     .btn-reject:hover { background: rgba(231,76,60,.1); }
-    .btn-unpublish {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px;
-      background: transparent; border: 1px solid rgba(245,166,35,.3); color: var(--accent2);
-      border-radius: 2px; cursor: pointer; transition: all .15s;
-    }
+    .btn-unpublish { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px; background: transparent; border: 1px solid rgba(245,166,35,.3); color: var(--accent2); border-radius: 2px; cursor: pointer; transition: all .15s; }
     .btn-unpublish:hover { background: rgba(245,166,35,.08); }
 
     /* ── EDIT PANEL ─────────────────────────────────────────── */
-    .ev-edit-panel {
-      border-top: 1px solid rgba(75,163,217,.15);
-      padding: 16px 16px 20px;
-      display: none;
-    }
+    .ev-edit-panel { border-top: 1px solid rgba(75,163,217,.15); padding: 16px 16px 20px; display: none; }
     .ev-edit-panel.open { display: block; }
     .edit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 12px; }
     .edit-group { display: flex; flex-direction: column; gap: 4px; }
@@ -176,40 +145,22 @@
     .edit-select option { background: #0F2F47; }
     .edit-textarea { resize: vertical; min-height: 60px; }
     .radio-row { display: flex; gap: 7px; flex-wrap: wrap; }
-    .radio-opt-sm {
-      display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--frost);
-      cursor: pointer; padding: 5px 10px; border: 1px solid rgba(75,163,217,.24);
-      border-radius: 3px; transition: all .15s; user-select: none;
-    }
+    .radio-opt-sm { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--frost); cursor: pointer; padding: 5px 10px; border: 1px solid rgba(75,163,217,.24); border-radius: 3px; transition: all .15s; user-select: none; }
     .radio-opt-sm input { display: none; }
     .radio-opt-sm.sel { background: rgba(75,163,217,.15); border-color: var(--sky); color: white; }
-    .edit-actions { display: flex; gap: 8px; margin-top: 16px; }
-    .btn-save {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 18px;
-      background: var(--sky); border: none; color: white; border-radius: 2px; cursor: pointer; transition: opacity .15s;
-    }
+    .edit-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+    .btn-save { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 18px; background: var(--sky); border: none; color: white; border-radius: 2px; cursor: pointer; transition: opacity .15s; }
     .btn-save:hover { opacity: .85; }
-    .btn-cancel-edit {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 16px;
-      background: transparent; border: 1px solid rgba(75,163,217,.25); color: var(--frost);
-      border-radius: 2px; cursor: pointer;
-    }
+    .btn-cancel-edit { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 16px; background: transparent; border: 1px solid rgba(75,163,217,.25); color: var(--frost); border-radius: 2px; cursor: pointer; }
 
     /* ── STATES ─────────────────────────────────────────────── */
     .state-msg { padding: 48px 24px; text-align: center; color: var(--muted); font-style: italic; }
     .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(75,163,217,.3); border-top-color: var(--sky); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .toast {
-      position: fixed; bottom: 24px; right: 24px; z-index: 999;
-      background: #1B5E8A; border: 1px solid rgba(75,163,217,.4); border-radius: 4px;
-      padding: 12px 18px; font-size: 13px; color: white; font-weight: 500;
-      transform: translateY(80px); opacity: 0; transition: all .25s; pointer-events: none;
-    }
+    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; background: #1B5E8A; border: 1px solid rgba(75,163,217,.4); border-radius: 4px; padding: 12px 18px; font-size: 13px; color: white; font-weight: 500; transform: translateY(80px); opacity: 0; transition: all .25s; pointer-events: none; }
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.success { background: #1a4a2e; border-color: rgba(46,204,113,.4); }
-    .toast.error { background: #4a1a1a; border-color: rgba(231,76,60,.4); }
+    .toast.error   { background: #4a1a1a; border-color: rgba(231,76,60,.4); }
   </style>
 </head>
 <body>
@@ -218,7 +169,7 @@
 <div class="topbar">
   <div class="topbar-logo">Les Tuffes <span>Admin</span></div>
   <div class="topbar-right">
-    <span class="admin-badge" id="admin-email-badge" style="display:none;"></span>
+    <span class="admin-badge" id="admin-badge" style="display:none;">Connecté</span>
     <button class="btn-logout" id="btn-logout" style="display:none;" onclick="logout()">Déconnexion</button>
     <a href="index.html" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;">← Site</a>
   </div>
@@ -230,15 +181,11 @@
     <div class="login-pretitle">Espace administration</div>
     <div class="login-title">Connexion</div>
     <div class="login-group">
-      <label class="login-label">Adresse e-mail</label>
-      <input class="login-input" type="email" id="login-email" placeholder="admin@exemple.fr" autocomplete="email">
-    </div>
-    <div class="login-group">
       <label class="login-label">Mot de passe</label>
       <input class="login-input" type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password">
     </div>
-    <button class="btn-login" onclick="doLogin()">Se connecter →</button>
-    <div class="login-error" id="login-error"></div>
+    <button class="btn-login" onclick="doLogin()">Accéder →</button>
+    <div class="login-error" id="login-error">Mot de passe incorrect.</div>
   </div>
 </div>
 
@@ -251,9 +198,9 @@
   </div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="pending" onclick="switchTab('pending',this)">En attente</button>
-    <button class="tab" data-tab="published" onclick="switchTab('published',this)">Publiés</button>
-    <button class="tab" data-tab="all" onclick="switchTab('all',this)">Tous</button>
+    <button class="tab active" data-tab="pending"   onclick="switchTab('pending',this)">En attente</button>
+    <button class="tab"        data-tab="published" onclick="switchTab('published',this)">Publiés</button>
+    <button class="tab"        data-tab="all"       onclick="switchTab('all',this)">Tous</button>
   </div>
 
   <div class="events-list" id="events-list">
@@ -261,10 +208,14 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
+// ================================================================
+// ⚙️  CHANGER CE MOT DE PASSE
+// ================================================================
+const ADMIN_PASSWORD = 'tuffes2025';   // ← modifiez ici
+
 // ================================================================
 // SUPABASE
 // ================================================================
@@ -272,52 +223,44 @@ const SUPABASE_URL      = 'https://arkbrvzacbereyukqfte.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFya2JydnphY2JlcmV5dWtxZnRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDg3ODUsImV4cCI6MjA5MDUyNDc4NX0.quPd-OGwu0HYjyvbdcdELlMvNieIBkyOuJHbC3TcM9E';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const MONTHS_FR = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
-let currentTab = 'pending';
-let allEvents  = [];
+const MONTHS_FR  = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+let currentTab   = 'pending';
+let allEvents    = [];
 
 // ================================================================
-// AUTH
+// AUTH (mot de passe local + sessionStorage)
 // ================================================================
-async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
+function doLogin() {
   const pwd   = document.getElementById('login-pwd').value;
   const errEl = document.getElementById('login-error');
-  errEl.style.display = 'none';
-
-  const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
-  if (error) {
-    errEl.textContent = 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
+  if (pwd === ADMIN_PASSWORD) {
+    sessionStorage.setItem('admin_ok', '1');
+    showApp();
+  } else {
     errEl.style.display = 'block';
-    return;
+    document.getElementById('login-pwd').value = '';
+    document.getElementById('login-pwd').focus();
   }
-  showApp(email);
 }
-
-// Allow login on Enter key
 document.getElementById('login-pwd').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
 
-async function logout() {
-  await sb.auth.signOut();
+function logout() {
+  sessionStorage.removeItem('admin_ok');
   location.reload();
 }
 
-function showApp(email) {
+function showApp() {
   document.getElementById('login-wrap').style.display  = 'none';
   document.getElementById('main-wrap').style.display   = 'block';
   document.getElementById('btn-logout').style.display  = 'inline-block';
-  const badge = document.getElementById('admin-email-badge');
-  badge.textContent = email;
-  badge.style.display = 'inline-block';
+  document.getElementById('admin-badge').style.display = 'inline-block';
   loadEvents();
 }
 
-// Restore session on reload
-sb.auth.getSession().then(({ data }) => {
-  if (data.session) showApp(data.session.user.email);
-});
+// Restaurer session si déjà connecté
+if (sessionStorage.getItem('admin_ok') === '1') showApp();
 
 // ================================================================
 // LOAD EVENTS
@@ -326,36 +269,39 @@ async function loadEvents() {
   document.getElementById('events-list').innerHTML =
     '<div class="state-msg"><span class="spinner"></span> Chargement…</div>';
   try {
-    const query = sb
+    const { data, error } = await sb
       .from('events')
       .select('id, title, sport, date_start, date_end, public_access, has_catering, notes, source_url, source_name, source_type, status')
       .order('date_start', { ascending: false });
-
-    const { data, error } = await query;
     if (error) throw error;
     allEvents = data || [];
     renderTab(currentTab);
   } catch (err) {
     document.getElementById('events-list').innerHTML =
-      `<div class="state-msg">Erreur de chargement. Assurez-vous que les politiques RLS sont en place.<br><small style="color:#ff8080;">${err.message}</small></div>`;
+      `<div class="state-msg">
+        Erreur de chargement. Vérifiez que les politiques RLS sont configurées.<br>
+        <small style="color:#ff8080;display:block;margin-top:8px;">${err.message}</small>
+        <small style="color:var(--muted);display:block;margin-top:6px;">
+          Exécutez dans Supabase SQL Editor :<br>
+          CREATE POLICY "anon_select_all" ON events FOR SELECT TO anon USING (true);<br>
+          CREATE POLICY "anon_update_all" ON events FOR UPDATE TO anon USING (true) WITH CHECK (true);<br>
+          CREATE POLICY "anon_delete_all" ON events FOR DELETE TO anon USING (true);
+        </small>
+      </div>`;
   }
 }
 
 function renderTab(tab) {
-  const list = allEvents.filter(e =>
-    tab === 'all' ? true : e.status === tab
-  );
+  const list    = allEvents.filter(e => tab === 'all' || e.status === tab);
   const pending = allEvents.filter(e => e.status === 'pending').length;
-  document.getElementById('pending-count').textContent =
-    `${pending} en attente`;
+  document.getElementById('pending-count').textContent = `${pending} en attente`;
 
   const el = document.getElementById('events-list');
   if (!list.length) {
     el.innerHTML = '<div class="state-msg">Aucun événement dans cette catégorie.</div>';
     return;
   }
-  el.innerHTML = list.map(ev => buildCard(ev)).join('');
-  // Init radios
+  el.innerHTML = list.map(buildCard).join('');
   el.querySelectorAll('.radio-opt-sm').forEach(opt => {
     opt.addEventListener('click', function() {
       const nm = this.querySelector('input').name;
@@ -377,32 +323,31 @@ function switchTab(tab, btn) {
 // BUILD CARD
 // ================================================================
 function buildCard(ev) {
-  const d = ev.date_start ? new Date(ev.date_start + 'T12:00:00') : null;
+  const d     = ev.date_start ? new Date(ev.date_start + 'T12:00:00') : null;
   const day   = d ? String(d.getDate()).padStart(2,'0') : '?';
   const month = d ? MONTHS_FR[d.getMonth()] : '?';
   const dateEnd = ev.date_end && ev.date_end !== ev.date_start ? ` → ${ev.date_end}` : '';
 
-  const statusBadge =
-    ev.status === 'pending'   ? `<span style="color:${CSS_VAR_ACCENT2};font-weight:600;">● En attente</span>` :
-    ev.status === 'published' ? `<span style="color:#2ECC71;font-weight:600;">✓ Publié</span>` :
-    `<span style="color:#e74c3c;font-weight:600;">✗ Rejeté</span>`;
+  const statusLabel =
+    ev.status === 'pending'   ? `<span style="color:#F5A623;font-weight:600;">● En attente</span>` :
+    ev.status === 'published' ? `<span style="color:#2ECC71;font-weight:600;">✓ Publié</span>`     :
+                                `<span style="color:#e74c3c;font-weight:600;">✗ Rejeté</span>`;
 
   const pubTxt = ev.public_access === true ? 'Oui' : ev.public_access === false ? 'Non' : 'Inconnu';
   const resTxt = ev.has_catering  === true ? 'Oui' : ev.has_catering  === false ? 'Non' : 'Inconnu';
-
   const pubVal = ev.public_access === true ? 'true' : ev.public_access === false ? 'false' : 'null';
   const resVal = ev.has_catering  === true ? 'true' : ev.has_catering  === false ? 'false' : 'null';
 
   const actionsBtns = ev.status === 'pending'
-    ? `<button class="btn-publish" onclick="publishEvent(${ev.id})">✓ Publier</button>
-       <button class="btn-edit" onclick="toggleEdit(${ev.id})">✎ Modifier</button>
-       <button class="btn-reject" onclick="rejectEvent(${ev.id})">✗ Rejeter</button>`
+    ? `<button class="btn-publish"   onclick="publishEvent(${ev.id})">✓ Publier</button>
+       <button class="btn-edit"      onclick="toggleEdit(${ev.id})">✎ Modifier</button>
+       <button class="btn-reject"    onclick="rejectEvent(${ev.id})">✗ Rejeter</button>`
     : ev.status === 'published'
-    ? `<button class="btn-edit" onclick="toggleEdit(${ev.id})">✎ Modifier</button>
+    ? `<button class="btn-edit"      onclick="toggleEdit(${ev.id})">✎ Modifier</button>
        <button class="btn-unpublish" onclick="unpublishEvent(${ev.id})">↩ Dépublier</button>
-       <button class="btn-reject" onclick="deleteEvent(${ev.id})">🗑 Supprimer</button>`
-    : `<button class="btn-publish" onclick="publishEvent(${ev.id})">↩ Republier</button>
-       <button class="btn-reject" onclick="deleteEvent(${ev.id})">🗑 Supprimer</button>`;
+       <button class="btn-reject"    onclick="deleteEvent(${ev.id})">🗑 Supprimer</button>`
+    : `<button class="btn-publish"   onclick="publishEvent(${ev.id})">↩ Republier</button>
+       <button class="btn-reject"    onclick="deleteEvent(${ev.id})">🗑 Supprimer</button>`;
 
   return `
   <div class="ev-card ${ev.status}" id="card-${ev.id}">
@@ -413,25 +358,24 @@ function buildCard(ev) {
       </div>
       <div class="ev-info">
         <div class="ev-sport">${ev.sport || '—'}</div>
-        <div class="ev-title">${escHtml(ev.title)}</div>
+        <div class="ev-title">${esc(ev.title)}</div>
         <div class="ev-meta">
-          ${statusBadge} &nbsp;·&nbsp;
+          ${statusLabel} &nbsp;·&nbsp;
           <strong>Dates :</strong> ${ev.date_start || '?'}${dateEnd} &nbsp;·&nbsp;
           <strong>Public :</strong> ${pubTxt} &nbsp;·&nbsp;
           <strong>Restauration :</strong> ${resTxt}
-          ${ev.source_url ? `<br><strong>Source :</strong> <a href="${escHtml(ev.source_url)}" target="_blank" rel="noopener">${escHtml(ev.source_url)}</a>` : ''}
-          ${ev.notes ? `<br><strong>Notes :</strong> ${escHtml(ev.notes)}` : ''}
+          ${ev.source_url ? `<br><strong>Source :</strong> <a href="${esc(ev.source_url)}" target="_blank" rel="noopener">${esc(ev.source_url)}</a>` : ''}
+          ${ev.notes ? `<br><strong>Notes :</strong> ${esc(ev.notes)}` : ''}
         </div>
       </div>
       <div class="ev-actions">${actionsBtns}</div>
     </div>
 
-    <!-- Panneau d'édition inline -->
     <div class="ev-edit-panel" id="edit-${ev.id}">
       <div class="edit-grid">
         <div class="edit-group full">
           <label class="edit-label">Nom de l'événement</label>
-          <input class="edit-input" id="e-title-${ev.id}" value="${escHtml(ev.title)}" type="text">
+          <input class="edit-input" id="e-title-${ev.id}" type="text" value="${esc(ev.title)}">
         </div>
         <div class="edit-group">
           <label class="edit-label">Date de début</label>
@@ -451,30 +395,30 @@ function buildCard(ev) {
         <div class="edit-group">
           <label class="edit-label">Accès public</label>
           <div class="radio-row">
-            <label class="radio-opt-sm${pubVal==='true'?' sel':''}"><input type="radio" name="ep-${ev.id}" value="true" ${pubVal==='true'?'checked':''}>Oui</label>
+            <label class="radio-opt-sm${pubVal==='true' ?' sel':''}"><input type="radio" name="ep-${ev.id}" value="true"  ${pubVal==='true' ?'checked':''}>Oui</label>
             <label class="radio-opt-sm${pubVal==='false'?' sel':''}"><input type="radio" name="ep-${ev.id}" value="false" ${pubVal==='false'?'checked':''}>Non</label>
-            <label class="radio-opt-sm${pubVal==='null'?' sel':''}"><input type="radio" name="ep-${ev.id}" value="null" ${pubVal==='null'||pubVal===''?'checked':''}>Inconnu</label>
+            <label class="radio-opt-sm${pubVal==='null' ?' sel':''}"><input type="radio" name="ep-${ev.id}" value="null"  ${pubVal==='null'||!pubVal?'checked':''}>Inconnu</label>
           </div>
         </div>
         <div class="edit-group">
           <label class="edit-label">Restauration</label>
           <div class="radio-row">
-            <label class="radio-opt-sm${resVal==='true'?' sel':''}"><input type="radio" name="er-${ev.id}" value="true" ${resVal==='true'?'checked':''}>Oui</label>
+            <label class="radio-opt-sm${resVal==='true' ?' sel':''}"><input type="radio" name="er-${ev.id}" value="true"  ${resVal==='true' ?'checked':''}>Oui</label>
             <label class="radio-opt-sm${resVal==='false'?' sel':''}"><input type="radio" name="er-${ev.id}" value="false" ${resVal==='false'?'checked':''}>Non</label>
-            <label class="radio-opt-sm${resVal==='null'?' sel':''}"><input type="radio" name="er-${ev.id}" value="null" ${resVal==='null'||resVal===''?'checked':''}>Inconnu</label>
+            <label class="radio-opt-sm${resVal==='null' ?' sel':''}"><input type="radio" name="er-${ev.id}" value="null"  ${resVal==='null'||!resVal?'checked':''}>Inconnu</label>
           </div>
         </div>
         <div class="edit-group full">
           <label class="edit-label">Lien source</label>
-          <input class="edit-input" id="e-url-${ev.id}" type="url" value="${escHtml(ev.source_url||'')}">
+          <input class="edit-input" id="e-url-${ev.id}" type="url" value="${esc(ev.source_url||'')}">
         </div>
         <div class="edit-group full">
           <label class="edit-label">Notes / Informations</label>
-          <textarea class="edit-textarea" id="e-notes-${ev.id}">${escHtml(ev.notes||'')}</textarea>
+          <textarea class="edit-textarea" id="e-notes-${ev.id}">${esc(ev.notes||'')}</textarea>
         </div>
       </div>
       <div class="edit-actions">
-        <button class="btn-save" onclick="saveEvent(${ev.id})">Enregistrer</button>
+        <button class="btn-save"        onclick="saveEvent(${ev.id})">Enregistrer</button>
         <button class="btn-cancel-edit" onclick="toggleEdit(${ev.id})">Annuler</button>
         ${ev.status === 'pending'
           ? `<button class="btn-publish" style="margin-left:auto;" onclick="saveAndPublish(${ev.id})">Enregistrer &amp; Publier →</button>`
@@ -484,16 +428,12 @@ function buildCard(ev) {
   </div>`;
 }
 
-const CSS_VAR_ACCENT2 = '#F5A623';
-
-function escHtml(s) {
+function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
 function toggleEdit(id) {
-  const panel = document.getElementById(`edit-${id}`);
-  panel.classList.toggle('open');
+  document.getElementById(`edit-${id}`).classList.toggle('open');
 }
 
 // ================================================================
@@ -507,14 +447,10 @@ function getRadioVal(name) {
   return null;
 }
 
-async function publishEvent(id) {
-  await updateStatus(id, 'published');
-}
-async function unpublishEvent(id) {
-  await updateStatus(id, 'pending');
-}
+async function publishEvent(id)   { await updateStatus(id, 'published'); }
+async function unpublishEvent(id) { await updateStatus(id, 'pending'); }
 async function rejectEvent(id) {
-  if (!confirm('Rejeter cet événement ? Il restera en base avec le statut "rejected".')) return;
+  if (!confirm('Rejeter cet événement ?')) return;
   await updateStatus(id, 'rejected');
 }
 async function deleteEvent(id) {
@@ -525,7 +461,6 @@ async function deleteEvent(id) {
   allEvents = allEvents.filter(e => e.id !== id);
   renderTab(currentTab);
 }
-
 async function updateStatus(id, status) {
   const { error } = await sb.from('events').update({ status }).eq('id', id);
   if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
@@ -535,7 +470,6 @@ async function updateStatus(id, status) {
   if (ev) ev.status = status;
   renderTab(currentTab);
 }
-
 async function saveEvent(id) {
   const payload = buildPayload(id);
   const { error } = await sb.from('events').update(payload).eq('id', id);
@@ -545,7 +479,6 @@ async function saveEvent(id) {
   if (ev) Object.assign(ev, payload);
   renderTab(currentTab);
 }
-
 async function saveAndPublish(id) {
   const payload = { ...buildPayload(id), status: 'published' };
   const { error } = await sb.from('events').update(payload).eq('id', id);
@@ -555,7 +488,6 @@ async function saveAndPublish(id) {
   if (ev) Object.assign(ev, payload);
   renderTab(currentTab);
 }
-
 function buildPayload(id) {
   return {
     title:         document.getElementById(`e-title-${id}`).value.trim(),
@@ -578,7 +510,7 @@ function showToast(msg, type = '') {
   t.textContent = msg;
   t.className = `toast ${type} show`;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 </script>
 </body>
