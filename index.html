@@ -316,13 +316,63 @@
     .nav-link.active { color: white; background: rgba(75,163,217,.18); }
 
     @media (max-width: 720px) {
-      .nav-links { display: none; }
+      .nav { flex-wrap: wrap; }
+      .nav-links { order: 3; width: 100%; justify-content: flex-start; padding-top: 4px; }
+      .nav-link { font-size: 10px; padding: 4px 8px; }
     }
+
+    /* ---- NEWS PREVIEW ---- */
+    .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 10px; }
+    .news-card {
+      background: rgba(27,94,138,.15); border: 1px solid rgba(75,163,217,.18);
+      border-radius: 4px; padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 6px;
+      text-decoration: none; transition: border-color .18s, transform .18s;
+    }
+    .news-card:hover { border-color: rgba(75,163,217,.5); transform: translateY(-2px); }
+    .news-card.tuffes { border-color: rgba(245,166,35,.4); }
+    .news-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .news-source {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--sky);
+    }
+    .news-date { font-size: 10px; color: var(--muted); }
+    .news-badge {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      background: rgba(245,166,35,.15); color: var(--accent2);
+      border: 1px solid rgba(245,166,35,.3); border-radius: 2px; padding: 1px 5px;
+    }
+    .news-title {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px;
+      color: white; line-height: 1.2;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .news-read {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; color: var(--sky); margin-top: auto;
+    }
+    .btn-voir-plus {
+      display: inline-block; margin-top: 20px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 20px;
+      border: 1px solid var(--sky); color: var(--sky); border-radius: 2px;
+      text-decoration: none; transition: background .15s, color .15s;
+    }
+    .btn-voir-plus:hover { background: var(--sky); color: white; }
     @media (max-width: 520px) {
       .form-row { grid-template-columns: 1fr; }
       .cta-strip { flex-direction: column; }
     }
   </style>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-00973E87ZQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-00973E87ZQ');
+  </script>
 </head>
 <body>
 
@@ -410,6 +460,21 @@
     <div class="cta-sub">Toutes les infos pratiques : accès, parking, hébergement</div>
   </div>
   <a class="cta-btn" href="venir-aux-tuffes.html">Préparer ma venue →</a>
+</div>
+
+<!-- DERNIÈRES ACTUALITÉS -->
+<div class="section" id="news-section">
+  <div class="section-header">
+    <h2 class="section-title">Actualités</h2>
+    <div class="section-line"></div>
+    <span class="section-meta" id="news-meta"></span>
+  </div>
+  <div class="news-grid" id="news-grid">
+    <div class="state-msg"><span class="spinner"></span> Chargement…</div>
+  </div>
+  <div style="text-align:center;">
+    <a href="articles.html" class="btn-voir-plus">Voir toutes les actualités →</a>
+  </div>
 </div>
 
 <!-- DETAIL MODAL -->
@@ -652,6 +717,46 @@ function renderEvents(events) {
 }
 
 // ================================================================
+// LOAD LATEST ARTICLES (preview 5)
+// ================================================================
+async function loadLatestArticles() {
+  const grid = document.getElementById('news-grid');
+  const meta = document.getElementById('news-meta');
+  try {
+    const { data, error } = await sb
+      .from('press_articles')
+      .select('title, url, source_name, published_at, mentions_tuffes')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(5);
+
+    if (error) throw error;
+    if (!data || !data.length) {
+      grid.innerHTML = '<div class="state-msg" style="padding:20px;">Aucun article disponible pour l\'instant.</div>';
+      meta.textContent = '';
+      return;
+    }
+    meta.textContent = `${data.length} récents`;
+    grid.innerHTML = data.map(a => {
+      const d = a.published_at ? new Date(a.published_at) : null;
+      const dateStr = d ? `${d.getDate()} ${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}` : '';
+      return `
+        <a class="news-card${a.mentions_tuffes?' tuffes':''}" href="${a.url}" target="_blank" rel="noopener noreferrer">
+          <div class="news-card-meta">
+            <span class="news-source">${a.source_name||''}</span>
+            <span class="news-date">${dateStr}</span>
+            ${a.mentions_tuffes ? '<span class="news-badge">⛰ Tuffes</span>' : ''}
+          </div>
+          <div class="news-title">${a.title||''}</div>
+          <span class="news-read">Lire l'article →</span>
+        </a>`;
+    }).join('');
+  } catch(err) {
+    grid.innerHTML = '<div class="state-msg" style="padding:20px;">Impossible de charger les actualités.</div>';
+  }
+}
+
+// ================================================================
 // LOAD FROM SUPABASE
 // ================================================================
 async function loadEvents() {
@@ -829,6 +934,7 @@ for (let i = 0; i < 18; i++) {
 // INIT
 // ================================================================
 loadEvents();
+loadLatestArticles();
 </script>
 </body>
 </html>
