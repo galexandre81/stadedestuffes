@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actualités Nordiques — Stade des Tuffes</title>
+  <meta name="description" content="Articles et actualités du ski nordique français : ski de fond, biathlon, saut à ski, combiné nordique. Sélection autour du Stade des Tuffes, Prémanon, Jura.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,400&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <style>
+    :root {
+      --ice: #E8F4FF;
+      --frost: #B8D9F5;
+      --sky: #4BA3D9;
+      --deep: #1B5E8A;
+      --night: #0D2B3E;
+      --snow: #F5F9FF;
+      --accent: #E8302A;
+      --accent2: #F5A623;
+      --muted: #6B9DB8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Barlow', sans-serif; background: var(--night); color: var(--snow); min-height: 100vh; overflow-x: hidden; }
+
+    /* ---- DISCLAIMER ---- */
+    .disclaimer {
+      background: rgba(245,166,35,0.1);
+      border-bottom: 1px solid rgba(245,166,35,0.3);
+      padding: 8px 24px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; color: var(--accent2);
+    }
+    .disclaimer-icon {
+      width: 15px; height: 15px; border: 1.5px solid currentColor;
+      border-radius: 50%; display: inline-flex; align-items: center;
+      justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0;
+    }
+    .disclaimer a { color: var(--accent2); }
+
+    /* ---- HERO ---- */
+    .hero {
+      position: relative; min-height: 280px;
+      background: linear-gradient(160deg, #0D2B3E 0%, #1B5E8A 55%, #4BA3D9 100%);
+      overflow: hidden; display: flex; flex-direction: column;
+      justify-content: space-between; padding: 0 0 28px;
+    }
+    .hero-grid {
+      position: absolute; inset: 0; opacity: 0.07;
+      background-image:
+        repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 60px),
+        repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 60px);
+    }
+    .mountain {
+      position: absolute; bottom: 0; left: 0; right: 0; width: 100%; opacity: 0.14;
+    }
+    .snowflakes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .flake {
+      position: absolute; border-radius: 50%; background: white;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      from { transform: translateY(-20px); opacity: .5; }
+      to   { transform: translateY(300px) translateX(24px); opacity: 0; }
+    }
+
+    /* ---- NAV ---- */
+    .nav {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-wrap: wrap; gap: 10px;
+    }
+    .logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 19px; letter-spacing: 2px; text-transform: uppercase; color: white; line-height: 1; text-decoration: none; }
+    .logo span { display: block; font-size: 9px; font-weight: 400; letter-spacing: 3px; color: var(--frost); margin-top: 2px; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .season-badge { background: var(--accent); color: white; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 11px; border-radius: 2px; }
+    .btn-announce {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 15px;
+      background: transparent; border: 1px solid var(--frost); color: var(--frost);
+      border-radius: 2px; cursor: pointer; transition: all .15s; text-decoration: none;
+    }
+    .btn-announce:hover { background: white; color: var(--deep); border-color: white; }
+    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .nav-link {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 11px;
+      color: var(--frost); text-decoration: none; border-radius: 2px;
+      transition: background .15s, color .15s;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: white; }
+    .nav-link.active { color: white; background: rgba(75,163,217,.18); }
+    @media (max-width: 720px) { .nav-links { display: none; } }
+
+    /* ---- HERO CONTENT ---- */
+    .hero-content { position: relative; z-index: 10; padding: 0 24px; }
+    .discipline-tags { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tag {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 3px 9px;
+      border: 1px solid rgba(184,217,245,.35); border-radius: 2px;
+      color: var(--frost); background: rgba(27,94,138,.3);
+    }
+    .hero-title {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+      font-size: clamp(36px,6vw,62px); line-height: .9;
+      text-transform: uppercase; letter-spacing: -1px; color: white;
+    }
+    .hero-title em { font-style: italic; color: var(--sky); }
+    .hero-sub { margin-top: 10px; font-size: 13px; color: var(--frost); }
+
+    /* ---- SECTION ---- */
+    .section { padding: 28px 24px; max-width: 1280px; margin: 0 auto; }
+    .section-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; text-transform: uppercase; letter-spacing: 2px; color: white; }
+    .section-line { flex: 1; height: 1px; background: rgba(75,163,217,.22); min-width: 20px; }
+    .section-meta { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+
+    /* ---- FILTERS ---- */
+    .filters-bar {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px;
+      align-items: center;
+    }
+    .filter-group { display: flex; gap: 5px; flex-wrap: wrap; }
+    .filter-sep {
+      width: 1px; background: rgba(75,163,217,.2); align-self: stretch;
+      margin: 0 4px;
+    }
+    .filter-btn {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 12px; border-radius: 2px;
+      border: 1px solid rgba(75,163,217,.28); background: transparent; color: var(--frost);
+      cursor: pointer; transition: all .15s;
+    }
+    .filter-btn:hover, .filter-btn.active { background: var(--sky); border-color: var(--sky); color: white; }
+    .filter-btn.tuffes-btn.active { background: var(--accent2); border-color: var(--accent2); color: var(--night); }
+
+    /* ---- GRID ---- */
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 1000px) { .articles-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 620px)  { .articles-grid { grid-template-columns: 1fr; } }
+
+    /* ---- ARTICLE CARD ---- */
+    .article-card {
+      background: rgba(27,94,138,.15);
+      border: 1px solid rgba(75,163,217,.18);
+      border-radius: 6px; overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: transform .18s, border-color .18s;
+      text-decoration: none;
+    }
+    .article-card:hover { transform: translateY(-3px); border-color: rgba(75,163,217,.5); }
+    .article-card.tuffes-highlight { border-color: rgba(245,166,35,.45); }
+
+    .card-img {
+      width: 100%; height: 160px; object-fit: cover;
+      background: rgba(27,94,138,.4);
+      display: block; flex-shrink: 0;
+    }
+    .card-img-placeholder {
+      width: 100%; height: 160px; flex-shrink: 0;
+      background: linear-gradient(135deg, rgba(27,94,138,.4) 0%, rgba(13,43,62,.6) 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card-img-placeholder svg { width: 36px; height: 36px; opacity: .25; fill: var(--frost); }
+
+    .card-body { padding: 13px 15px; flex: 1; display: flex; flex-direction: column; gap: 7px; }
+
+    .card-meta {
+      display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    }
+    .card-source {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--sky);
+    }
+    .card-date { font-size: 11px; color: var(--muted); }
+    .badge-tuffes {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      background: rgba(245,166,35,.15); color: var(--accent2);
+      border: 1px solid rgba(245,166,35,.35); border-radius: 2px;
+      padding: 1px 6px; white-space: nowrap;
+    }
+
+    .card-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+    .sport-tag {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 6px;
+      border-radius: 2px; border: 1px solid;
+    }
+    .sport-tag.fond    { color: #4BA3D9; border-color: rgba(75,163,217,.35); background: rgba(75,163,217,.1); }
+    .sport-tag.biathlon{ color: #F5A623; border-color: rgba(245,166,35,.35); background: rgba(245,166,35,.1); }
+    .sport-tag.saut    { color: #9B59B6; border-color: rgba(155,89,182,.35); background: rgba(155,89,182,.1); }
+    .sport-tag.combine { color: #2ECC71; border-color: rgba(46,204,113,.35); background: rgba(46,204,113,.1); }
+
+    .card-title {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px;
+      color: white; line-height: 1.25; flex: 1;
+    }
+    .card-summary {
+      font-size: 12px; color: rgba(184,217,245,.75); line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 15px 11px;
+      border-top: 1px solid rgba(75,163,217,.1);
+      font-size: 11px; color: var(--muted);
+    }
+    .card-rights { font-style: italic; font-size: 10px; }
+    .card-link {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; color: var(--sky);
+      text-decoration: none; white-space: nowrap;
+    }
+    .card-link:hover { color: white; }
+
+    /* ---- PAGINATION ---- */
+    .pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 28px 0 10px;
+    }
+    .page-btn {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 7px 14px; border-radius: 2px;
+      border: 1px solid rgba(75,163,217,.28);
+      background: transparent; color: var(--frost);
+      cursor: pointer; transition: all .15s;
+    }
+    .page-btn:hover:not(:disabled) { background: rgba(75,163,217,.18); border-color: var(--sky); color: white; }
+    .page-btn:disabled { opacity: .35; cursor: default; }
+    .page-btn.current { background: var(--sky); border-color: var(--sky); color: white; cursor: default; }
+    .page-info { font-size: 12px; color: var(--muted); padding: 0 8px; }
+
+    /* Loading / empty */
+    .state-msg {
+      grid-column: 1/-1; padding: 60px 20px; text-align: center;
+      color: var(--muted); font-size: 14px; font-style: italic;
+    }
+    .spinner {
+      display: inline-block; width: 20px; height: 20px;
+      border: 2px solid rgba(75,163,217,.3); border-top-color: var(--sky);
+      border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  <span class="disclaimer-icon">i</span>
+  <div>
+    <strong>Site non officiel</strong> — Les articles proviennent de sources tierces et sont affichés à titre informatif.
+    Cliquez sur chaque article pour lire l'intégralité sur la source originale.
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="snowflakes" id="snowflakes"></div>
+  <svg class="mountain" viewBox="0 0 1200 200" preserveAspectRatio="none">
+    <polygon points="0,200 150,80 280,140 400,40 520,120 640,20 760,100 880,50 1000,110 1100,60 1200,90 1200,200" fill="white"/>
+  </svg>
+
+  <nav class="nav">
+    <a href="index.html" class="logo">
+      Les Tuffes
+      <span>Stade Nordique · Prémanon · Site non officiel</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Calendrier</a>
+      <a href="articles.html" class="nav-link active">Actualités</a>
+      <a href="venir-aux-tuffes.html" class="nav-link">Venir aux Tuffes</a>
+    </div>
+    <div class="nav-right">
+      <span class="season-badge">Saison 2025–26</span>
+      <a href="index.html" class="btn-announce">+ Soumettre un événement</a>
+    </div>
+  </nav>
+
+  <div class="hero-content">
+    <div class="discipline-tags">
+      <span class="tag">Ski de fond</span>
+      <span class="tag">Biathlon</span>
+      <span class="tag">Combiné nordique</span>
+      <span class="tag">Saut à ski</span>
+    </div>
+    <h1 class="hero-title">Actualités<br><em>Nordiques</em></h1>
+    <p class="hero-sub">Articles sélectionnés autour du Stade des Tuffes et du ski nordique français</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="section">
+  <div class="section-header">
+    <h2 class="section-title">Articles</h2>
+    <div class="section-line"></div>
+    <span class="section-meta" id="article-count">Chargement…</span>
+  </div>
+
+  <!-- FILTRES -->
+  <div class="filters-bar">
+    <div class="filter-group" id="filter-sport">
+      <button class="filter-btn active" data-sport="all">Toutes disciplines</button>
+      <button class="filter-btn" data-sport="fond">Ski de fond</button>
+      <button class="filter-btn" data-sport="biathlon">Biathlon</button>
+      <button class="filter-btn" data-sport="saut">Saut à ski</button>
+      <button class="filter-btn" data-sport="combine">Combiné</button>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="filter-group" id="filter-source">
+      <button class="filter-btn active" data-source="all">Toutes sources</button>
+    </div>
+    <div class="filter-sep"></div>
+    <button class="filter-btn tuffes-btn" id="btn-tuffes" data-tuffes="false">⛰ Tuffes uniquement</button>
+  </div>
+
+  <!-- GRILLE -->
+  <div class="articles-grid" id="articles-grid">
+    <div class="state-msg"><span class="spinner"></span> Chargement des articles…</div>
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<script>
+// ================================================================
+// CONFIG SUPABASE
+// ================================================================
+const SUPABASE_URL      = 'https://arkbrvzacbereyukqfte.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFya2JydnphY2JlcmV5dWtxZnRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDg3ODUsImV4cCI6MjA5MDUyNDc4NX0.quPd-OGwu0HYjyvbdcdELlMvNieIBkyOuJHbC3TcM9E';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const PAGE_SIZE = 20;
+
+// ================================================================
+// STATE
+// ================================================================
+let allArticles   = [];
+let sources       = [];
+let activeSport   = 'all';
+let activeSource  = 'all';
+let tuffesOnly    = false;
+let currentPage   = 1;
+
+// ================================================================
+// HELPERS
+// ================================================================
+const MONTHS_FR = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sep.','oct.','nov.','déc.'];
+
+function formatDate(str) {
+  if (!str) return '';
+  const d = new Date(str);
+  return `${d.getDate()} ${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ================================================================
+// BUILD CARD
+// ================================================================
+function buildCard(a) {
+  const tuffes = a.mentions_tuffes;
+  const tags   = Array.isArray(a.sport_tags) ? a.sport_tags : [];
+
+  const imgHtml = a.image_url
+    ? `<img class="card-img" src="${escHtml(a.image_url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-1 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>`
+    : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-1 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>`;
+
+  const sportTags = tags.map(t => `<span class="sport-tag ${t}">${t}</span>`).join('');
+  const tuffeBadge = tuffes ? `<span class="badge-tuffes">⛰ Tuffes</span>` : '';
+
+  return `
+    <a class="article-card${tuffes?' tuffes-highlight':''}" href="${escHtml(a.url)}" target="_blank" rel="noopener noreferrer">
+      ${imgHtml}
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="card-source">${escHtml(a.source_name || '')}</span>
+          <span class="card-date">${formatDate(a.published_at)}</span>
+          ${tuffeBadge}
+        </div>
+        ${sportTags ? `<div class="card-tags">${sportTags}</div>` : ''}
+        <div class="card-title">${escHtml(a.title || '')}</div>
+        ${a.summary ? `<div class="card-summary">${escHtml(a.summary)}</div>` : ''}
+      </div>
+      <div class="card-footer">
+        <span class="card-rights">Article extrait de ${escHtml(a.source_name || 'la source')} — cliquez pour lire l'original</span>
+        <span class="card-link">Lire →</span>
+      </div>
+    </a>`;
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ================================================================
+// FILTER + RENDER
+// ================================================================
+function getFiltered() {
+  return allArticles.filter(a => {
+    if (tuffesOnly && !a.mentions_tuffes) return false;
+    if (activeSource !== 'all' && a.source_name !== activeSource) return false;
+    if (activeSport !== 'all') {
+      const tags = Array.isArray(a.sport_tags) ? a.sport_tags : [];
+      if (!tags.includes(activeSport)) return false;
+    }
+    return true;
+  });
+}
+
+function render() {
+  const filtered = getFiltered();
+  const total    = filtered.length;
+  const pages    = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > pages) currentPage = 1;
+
+  const slice = filtered.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+  document.getElementById('article-count').textContent =
+    total === 0 ? '0 article'
+    : `${total} article${total>1?'s':''} · page ${currentPage}/${pages}`;
+
+  const grid = document.getElementById('articles-grid');
+  if (!slice.length) {
+    grid.innerHTML = '<div class="state-msg">Aucun article pour ce filtre.</div>';
+  } else {
+    grid.innerHTML = slice.map(buildCard).join('');
+  }
+  renderPagination(pages);
+}
+
+function renderPagination(pages) {
+  const p = document.getElementById('pagination');
+  if (pages <= 1) { p.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" id="pg-prev" ${currentPage===1?'disabled':''}>← Précédent</button>`;
+  // Page numbers (show max 5 around current)
+  const start = Math.max(1, currentPage - 2);
+  const end   = Math.min(pages, currentPage + 2);
+  if (start > 1) html += `<button class="page-btn" data-page="1">1</button>${start>2?'<span class="page-info">…</span>':''}`;
+  for (let i = start; i <= end; i++) {
+    html += `<button class="page-btn${i===currentPage?' current':''}" data-page="${i}">${i}</button>`;
+  }
+  if (end < pages) html += `${end<pages-1?'<span class="page-info">…</span>':''}<button class="page-btn" data-page="${pages}">${pages}</button>`;
+  html += `<button class="page-btn" id="pg-next" ${currentPage===pages?'disabled':''}>Suivant →</button>`;
+  p.innerHTML = html;
+
+  p.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => { currentPage = +btn.dataset.page; render(); window.scrollTo({top:0,behavior:'smooth'}); });
+  });
+  const prev = document.getElementById('pg-prev');
+  const next = document.getElementById('pg-next');
+  if (prev) prev.addEventListener('click', () => { if(currentPage>1){currentPage--;render();window.scrollTo({top:0,behavior:'smooth'});} });
+  if (next) next.addEventListener('click', () => { if(currentPage<pages){currentPage++;render();window.scrollTo({top:0,behavior:'smooth'});} });
+}
+
+// ================================================================
+// SOURCE FILTER BUTTONS — built dynamically after load
+// ================================================================
+function buildSourceFilters() {
+  const container = document.getElementById('filter-source');
+  const existing  = new Set(sources);
+  // Keep "Toutes sources" button, add one per source
+  const all = container.querySelector('[data-source="all"]');
+  container.innerHTML = '';
+  container.appendChild(all);
+  existing.forEach(src => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset.source = src;
+    btn.textContent = src;
+    container.appendChild(btn);
+  });
+  container.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeSource  = btn.dataset.source;
+      currentPage   = 1;
+      render();
+    });
+  });
+}
+
+// ================================================================
+// LOAD FROM SUPABASE
+// ================================================================
+async function loadArticles() {
+  try {
+    const { data, error } = await sb
+      .from('press_articles')
+      .select('id, title, url, source_name, published_at, summary, image_url, sport_tags, mentions_tuffes')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(500);
+
+    if (error) throw error;
+    allArticles = data || [];
+
+    // Collect unique sources
+    const srcSet = new Set(allArticles.map(a => a.source_name).filter(Boolean));
+    sources = [...srcSet].sort();
+    buildSourceFilters();
+    render();
+  } catch (err) {
+    console.error('Erreur Supabase:', err);
+    document.getElementById('articles-grid').innerHTML =
+      '<div class="state-msg">Impossible de charger les articles. Réessayez plus tard.</div>';
+    document.getElementById('article-count').textContent = '';
+  }
+}
+
+// ================================================================
+// SPORT FILTER
+// ================================================================
+document.getElementById('filter-sport').querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('filter-sport').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeSport = btn.dataset.sport;
+    currentPage = 1;
+    render();
+  });
+});
+
+// ================================================================
+// TUFFES ONLY FILTER
+// ================================================================
+document.getElementById('btn-tuffes').addEventListener('click', function() {
+  tuffesOnly = !tuffesOnly;
+  this.dataset.tuffes = tuffesOnly;
+  this.classList.toggle('active', tuffesOnly);
+  currentPage = 1;
+  render();
+});
+
+// ================================================================
+// SNOWFLAKES
+// ================================================================
+const sc2 = document.getElementById('snowflakes');
+for (let i = 0; i < 14; i++) {
+  const f = document.createElement('div');
+  f.className = 'flake';
+  const sz = Math.random()*3+2;
+  f.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-duration:${Math.random()*7+4}s;animation-delay:${Math.random()*6}s;opacity:${Math.random()*0.4+0.2};`;
+  sc2.appendChild(f);
+}
+
+// ================================================================
+// INIT
+// ================================================================
+loadArticles();
+</script>
+</body>
+</html>

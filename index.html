@@ -304,6 +304,20 @@
     .form-success h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; text-transform: uppercase; color: white; margin-bottom: 6px; }
     .form-success p { font-size: 13px; color: var(--muted); }
 
+    /* ---- NAV LINKS ---- */
+    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .nav-link {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 11px;
+      color: var(--frost); text-decoration: none; border-radius: 2px;
+      transition: background .15s, color .15s;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: white; }
+    .nav-link.active { color: white; background: rgba(75,163,217,.18); }
+
+    @media (max-width: 720px) {
+      .nav-links { display: none; }
+    }
     @media (max-width: 520px) {
       .form-row { grid-template-columns: 1fr; }
       .cta-strip { flex-direction: column; }
@@ -335,9 +349,14 @@
       Les Tuffes
       <span>Stade Nordique · Prémanon · Site non officiel</span>
     </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link active">Calendrier</a>
+      <a href="articles.html" class="nav-link">Actualités</a>
+      <a href="venir-aux-tuffes.html" class="nav-link">Venir aux Tuffes</a>
+    </div>
     <div class="nav-right">
       <span class="season-badge">Saison 2025–26</span>
-      <button class="btn-announce" onclick="openForm()">+ Annoncer un événement</button>
+      <button class="btn-announce" onclick="openForm()">+ Soumettre un événement</button>
     </div>
   </nav>
 
@@ -390,7 +409,7 @@
     <div class="cta-text">Venir aux Tuffes</div>
     <div class="cta-sub">Toutes les infos pratiques : accès, parking, hébergement</div>
   </div>
-  <button class="cta-btn" onclick="window.open('https://www.ensm.sports.gouv.fr/accueil-hebergement-restauration-cnsnmm/','_blank')">Préparer ma venue →</button>
+  <a class="cta-btn" href="venir-aux-tuffes.html">Préparer ma venue →</a>
 </div>
 
 <!-- DETAIL MODAL -->

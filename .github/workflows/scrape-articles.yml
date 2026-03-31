@@ -1,0 +1,31 @@
+name: Scrape Articles
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # toutes les 6h (0h, 6h, 12h, 18h UTC)
+  workflow_dispatch:          # déclenchement manuel depuis GitHub Actions
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install feedparser requests beautifulsoup4 supabase python-dotenv
+
+      - name: Run article scraper
+        run: python scrape_articles.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}

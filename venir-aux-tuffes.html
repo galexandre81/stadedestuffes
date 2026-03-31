@@ -34,8 +34,8 @@
       min-height: 52vh;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
-      padding: 3rem 2rem 3.5rem;
+      justify-content: space-between;
+      padding: 0 0 3.5rem;
       overflow: hidden;
       background: linear-gradient(160deg, #0d2a50 0%, #0a1f3c 60%, #061428 100%);
     }
@@ -364,6 +364,37 @@
       margin: 4rem 0 0;
     }
 
+    /* ─── NAV ─── */
+    .nav {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 2rem; border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-wrap: wrap; gap: 10px;
+    }
+    .logo {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+      font-size: 19px; letter-spacing: 2px; text-transform: uppercase;
+      color: white; line-height: 1; text-decoration: none;
+    }
+    .logo span { display: block; font-size: 9px; font-weight: 400; letter-spacing: 3px; color: rgba(221,232,245,.7); margin-top: 2px; }
+    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .nav-link {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 11px;
+      color: rgba(221,232,245,.75); text-decoration: none; border-radius: 2px;
+      transition: background .15s, color .15s;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: white; }
+    .nav-link.active { color: white; background: rgba(0,180,216,.18); }
+    .btn-announce {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 15px;
+      background: transparent; border: 1px solid rgba(221,232,245,.4); color: rgba(221,232,245,.85);
+      border-radius: 2px; cursor: pointer; text-decoration: none; transition: all .15s;
+    }
+    .btn-announce:hover { background: white; color: var(--bleu); border-color: white; }
+    @media (max-width: 720px) { .nav-links { display: none; } }
+
     /* ─── SNOW DECORATION ─── */
     .snow-dots {
       position: fixed;
@@ -401,12 +432,23 @@
 
 <!-- ─── HERO ─── -->
 <header class="hero">
+  <nav class="nav">
+    <a href="index.html" class="logo">Les Tuffes <span>Stade Nordique · Prémanon · Site non officiel</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Calendrier</a>
+      <a href="articles.html" class="nav-link">Actualités</a>
+      <a href="venir-aux-tuffes.html" class="nav-link active">Venir aux Tuffes</a>
+    </div>
+    <a href="index.html" class="btn-announce">+ Soumettre un événement</a>
+  </nav>
   <svg class="hero-mountains" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMax meet" aria-hidden="true">
     <polygon points="0,300 120,80 240,200 340,40 480,220 600,100 700,180 800,60 800,300" fill="white"/>
   </svg>
+  <div style="padding:0 2rem;">
   <div class="hero-badge">Stade Nordique des Tuffes</div>
   <h1>Venir<br>aux <span>Tuffes</span></h1>
   <p class="hero-sub">Toutes les informations pour rejoindre le stade nordique, stationner et trouver un hébergement sur la station des Rousses.</p>
+  </div>
 </header>
 
 <!-- ─── CONTENT ─── -->
