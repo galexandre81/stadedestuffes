@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stade Nordique des Tuffes — Calendrier des compétitions</title>
+  <meta name="description" content="Calendrier non officiel des compétitions et événements au Stade Nordique des Tuffes, Prémanon. Ski de fond, biathlon, combiné nordique, saut à ski.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,400&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <style>
+    :root {
+      --ice: #E8F4FF;
+      --frost: #B8D9F5;
+      --sky: #4BA3D9;
+      --deep: #1B5E8A;
+      --night: #0D2B3E;
+      --snow: #F5F9FF;
+      --accent: #E8302A;
+      --accent2: #F5A623;
+      --muted: #6B9DB8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Barlow', sans-serif; background: var(--night); color: var(--snow); min-height: 100vh; overflow-x: hidden; }
+
+    /* ---- DISCLAIMER ---- */
+    .disclaimer {
+      background: rgba(245,166,35,0.1);
+      border-bottom: 1px solid rgba(245,166,35,0.3);
+      padding: 8px 24px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; color: var(--accent2);
+    }
+    .disclaimer-icon {
+      width: 15px; height: 15px; border: 1.5px solid currentColor;
+      border-radius: 50%; display: inline-flex; align-items: center;
+      justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0;
+    }
+    .disclaimer a { color: var(--accent2); }
+
+    /* ---- HERO ---- */
+    .hero {
+      position: relative; min-height: 320px;
+      background: linear-gradient(160deg, #0D2B3E 0%, #1B5E8A 55%, #4BA3D9 100%);
+      overflow: hidden; display: flex; flex-direction: column;
+      justify-content: flex-end; padding: 0 0 28px;
+    }
+    .hero-grid {
+      position: absolute; inset: 0; opacity: 0.07;
+      background-image:
+        repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 60px),
+        repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 60px);
+    }
+    .mountain {
+      position: absolute; bottom: 0; left: 0; right: 0; width: 100%; opacity: 0.14;
+    }
+    .snowflakes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .flake {
+      position: absolute; border-radius: 50%; background: white;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      from { transform: translateY(-20px); opacity: .5; }
+      to   { transform: translateY(340px) translateX(24px); opacity: 0; }
+    }
+
+    .nav {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-wrap: wrap; gap: 10px;
+    }
+    .logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 19px; letter-spacing: 2px; text-transform: uppercase; color: white; line-height: 1; }
+    .logo span { display: block; font-size: 9px; font-weight: 400; letter-spacing: 3px; color: var(--frost); margin-top: 2px; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .season-badge { background: var(--accent); color: white; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 11px; border-radius: 2px; }
+    .btn-announce {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 15px;
+      background: transparent; border: 1px solid var(--frost); color: var(--frost);
+      border-radius: 2px; cursor: pointer; transition: all .15s;
+    }
+    .btn-announce:hover { background: white; color: var(--deep); border-color: white; }
+
+    .hero-content { position: relative; z-index: 10; padding: 0 24px; }
+    .discipline-tags { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tag {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 3px 9px;
+      border: 1px solid rgba(184,217,245,.35); border-radius: 2px;
+      color: var(--frost); background: rgba(27,94,138,.3);
+    }
+    .hero-title {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+      font-size: clamp(40px,7vw,70px); line-height: .9;
+      text-transform: uppercase; letter-spacing: -1px; color: white;
+    }
+    .hero-title em { font-style: italic; color: var(--sky); }
+    .hero-sub { margin-top: 10px; font-size: 13px; color: var(--frost); }
+
+    /* ---- SECTION ---- */
+    .section { padding: 32px 24px; }
+    .section-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+    .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; color: white; }
+    .section-line { flex: 1; height: 1px; background: rgba(75,163,217,.22); }
+    .section-meta { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+    /* ---- FILTERS ---- */
+    .filters { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 20px; }
+    .filter-btn {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 13px; border-radius: 2px;
+      border: 1px solid rgba(75,163,217,.28); background: transparent; color: var(--frost);
+      cursor: pointer; transition: all .15s;
+    }
+    .filter-btn:hover, .filter-btn.active { background: var(--sky); border-color: var(--sky); color: white; }
+
+    /* ---- CARDS ---- */
+    .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; }
+    .event-card {
+      background: rgba(27,94,138,.18); border: 1px solid rgba(75,163,217,.2);
+      border-radius: 4px; overflow: hidden; cursor: pointer;
+      transition: transform .18s, border-color .18s;
+    }
+    .event-card:hover { transform: translateY(-3px); border-color: rgba(75,163,217,.55); }
+    .event-card.highlight { border-color: rgba(232,48,42,.5); }
+    .card-top { display: flex; }
+    .card-date {
+      padding: 13px 11px; text-align: center; min-width: 55px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .card-date.past   { background: var(--deep); }
+    .card-date.soon   { background: var(--accent); }
+    .card-date.future { background: #2A5B7A; }
+    .date-day   { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 24px; line-height: 1; color: white; }
+    .date-month { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,.75); margin-top: 2px; }
+    .card-info  { padding: 11px 13px; flex: 1; }
+    .card-sport { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--sky); margin-bottom: 3px; }
+    .card-sport.biathlon { color: #F5A623; }
+    .card-sport.saut     { color: #9B59B6; }
+    .card-sport.combine  { color: #2ECC71; }
+    .card-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; color: white; line-height: 1.2; margin-bottom: 7px; }
+    .card-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; padding: 2px 6px; border-radius: 2px;
+    }
+    .badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .badge-public  { background: rgba(46,204,113,.12); color: #2ECC71; border: 1px solid rgba(46,204,113,.28); }
+    .badge-nopublic{ background: rgba(231,76,60,.12);  color: #E74C3C; border: 1px solid rgba(231,76,60,.28); }
+    .badge-resto   { background: rgba(245,166,35,.12); color: #F5A623; border: 1px solid rgba(245,166,35,.28); }
+    .badge-noresto { background: rgba(149,165,166,.08);color: #95A5A6; border: 1px solid rgba(149,165,166,.18);}
+    .badge-public  .badge-dot { background: #2ECC71; }
+    .badge-nopublic.badge-dot { background: #E74C3C; }
+    .badge-resto   .badge-dot { background: #F5A623; }
+    .badge-noresto .badge-dot { background: #95A5A6; }
+
+    /* Loading / empty */
+    .state-msg {
+      grid-column: 1/-1; padding: 40px; text-align: center;
+      color: var(--muted); font-size: 14px; font-style: italic;
+    }
+    .spinner {
+      display: inline-block; width: 20px; height: 20px;
+      border: 2px solid rgba(75,163,217,.3); border-top-color: var(--sky);
+      border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- LEGEND ---- */
+    .legend {
+      margin-top: 24px; padding: 14px 18px;
+      background: rgba(13,43,62,.5); border: 1px solid rgba(75,163,217,.13);
+      border-radius: 4px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    }
+    .legend-title { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+    .legend-items { display: flex; flex-wrap: wrap; gap: 14px; }
+    .legend-item  { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--frost); }
+    .legend-dot   { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ---- CTA STRIP ---- */
+    .cta-strip {
+      margin: 0 24px 36px;
+      background: linear-gradient(100deg, var(--sky) 0%, var(--deep) 100%);
+      border-radius: 4px; padding: 20px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 14px;
+    }
+    .cta-text { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; color: white; }
+    .cta-sub  { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+    .cta-btn  {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 10px 20px;
+      background: white; color: var(--deep); border: none; border-radius: 2px;
+      cursor: pointer; transition: opacity .15s; white-space: nowrap;
+    }
+    .cta-btn:hover { opacity: .85; }
+
+    /* ======= MODAL ======= */
+    .overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(8,22,34,.88);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: #0F2F47; border: 1px solid rgba(75,163,217,.35);
+      border-radius: 6px; width: 100%; max-width: 500px;
+      max-height: 90vh; overflow-y: auto;
+      transform: translateY(14px); transition: transform .22s;
+    }
+    .overlay.open .modal { transform: translateY(0); }
+    .modal-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 20px 22px 14px; border-bottom: 1px solid rgba(75,163,217,.16);
+    }
+    .modal-close {
+      background: none; border: none; color: var(--muted); font-size: 18px;
+      cursor: pointer; padding: 0; margin-left: 12px; line-height: 1;
+      transition: color .15s;
+    }
+    .modal-close:hover { color: white; }
+    .modal-body { padding: 18px 22px 22px; }
+    .modal-row {
+      display: flex; gap: 10px; padding: 10px 0;
+      border-bottom: 1px solid rgba(75,163,217,.1);
+    }
+    .modal-row:last-child { border-bottom: none; }
+    .modal-lbl {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
+      font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); min-width: 100px; padding-top: 2px;
+    }
+    .modal-val { font-size: 13px; color: var(--snow); flex: 1; line-height: 1.5; }
+    .modal-val a { color: var(--sky); text-decoration: none; border-bottom: 1px solid rgba(75,163,217,.35); }
+    .modal-val a:hover { border-color: var(--sky); }
+    .source-box {
+      margin-top: 16px; background: rgba(13,43,62,.7);
+      border: 1px solid rgba(75,163,217,.18); border-radius: 4px; padding: 13px 15px;
+    }
+    .source-lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+    .source-link { font-size: 12px; color: var(--sky); word-break: break-all; }
+    .source-link a { color: var(--sky); text-decoration: none; }
+    .modal-disclaimer {
+      margin-top: 13px; font-size: 11px; color: var(--muted);
+      font-style: italic; line-height: 1.5; padding-top: 10px;
+      border-top: 1px solid rgba(75,163,217,.1);
+    }
+
+    /* ======= FORM MODAL ======= */
+    .form-head { padding: 20px 22px 14px; border-bottom: 1px solid rgba(75,163,217,.16); }
+    .form-pretitle { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--sky); margin-bottom: 3px; }
+    .form-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; text-transform: uppercase; color: white; }
+    .form-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .form-body { padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--frost); }
+    .req { color: var(--accent); }
+    .form-input, .form-select, .form-textarea {
+      background: rgba(13,43,62,.8); border: 1px solid rgba(75,163,217,.28);
+      border-radius: 3px; color: var(--snow); font-family: 'Barlow', sans-serif;
+      font-size: 13px; padding: 8px 11px; outline: none; width: 100%;
+      transition: border-color .15s;
+    }
+    .form-input:focus,.form-select:focus,.form-textarea:focus { border-color: var(--sky); }
+    .form-select option { background: #0F2F47; }
+    .form-textarea { resize: vertical; min-height: 70px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .radio-opt {
+      display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--frost);
+      cursor: pointer; padding: 6px 12px; border: 1px solid rgba(75,163,217,.28);
+      border-radius: 3px; transition: all .15s; user-select: none;
+    }
+    .radio-opt input { display: none; }
+    .radio-opt.sel { background: rgba(75,163,217,.16); border-color: var(--sky); color: white; }
+    .radio-dot { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--muted); flex-shrink: 0; transition: all .15s; }
+    .radio-opt.sel .radio-dot { background: var(--sky); border-color: var(--sky); }
+    .form-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 2px; }
+    .btn-cancel {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 18px;
+      background: transparent; border: 1px solid rgba(75,163,217,.28); color: var(--frost);
+      border-radius: 2px; cursor: pointer; transition: border-color .15s;
+    }
+    .btn-cancel:hover { border-color: var(--frost); }
+    .btn-submit {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 22px;
+      background: var(--sky); border: none; color: white; border-radius: 2px;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-submit:hover { opacity: .85; }
+    .form-success {
+      padding: 24px; text-align: center; display: none;
+    }
+    .form-success-icon { font-size: 32px; margin-bottom: 10px; }
+    .form-success h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; text-transform: uppercase; color: white; margin-bottom: 6px; }
+    .form-success p { font-size: 13px; color: var(--muted); }
+
+    @media (max-width: 520px) {
+      .form-row { grid-template-columns: 1fr; }
+      .cta-strip { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  <span class="disclaimer-icon">i</span>
+  <div>
+    <strong>Site non officiel</strong> — initiative indépendante, sans lien avec le CNSNMM ou l'ENSM.
+    Informations collectées automatiquement sur le web, peuvent être incomplètes.
+    Site officiel : <a href="https://www.ensm.sports.gouv.fr/stade-nordique-des-tuffes-cnsnmm/" target="_blank" rel="noopener">ensm.sports.gouv.fr</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="snowflakes" id="snowflakes"></div>
+  <svg class="mountain" viewBox="0 0 1200 200" preserveAspectRatio="none">
+    <polygon points="0,200 150,80 280,140 400,40 520,120 640,20 760,100 880,50 1000,110 1100,60 1200,90 1200,200" fill="white"/>
+  </svg>
+
+  <nav class="nav">
+    <div class="logo">
+      Les Tuffes
+      <span>Stade Nordique · Prémanon · Site non officiel</span>
+    </div>
+    <div class="nav-right">
+      <span class="season-badge">Saison 2025–26</span>
+      <button class="btn-announce" onclick="openForm()">+ Annoncer un événement</button>
+    </div>
+  </nav>
+
+  <div class="hero-content">
+    <div class="discipline-tags">
+      <span class="tag">Ski de fond</span>
+      <span class="tag">Biathlon</span>
+      <span class="tag">Combiné nordique</span>
+      <span class="tag">Saut à ski</span>
+    </div>
+    <h1 class="hero-title">Stade<br><em>Nordique</em><br>des Tuffes</h1>
+    <p class="hero-sub">Calendrier des compétitions · Prémanon, Jura · Alt. 1020 m</p>
+  </div>
+</div>
+
+<!-- CALENDRIER -->
+<div class="section">
+  <div class="section-header">
+    <h2 class="section-title">Calendrier</h2>
+    <div class="section-line"></div>
+    <span class="section-meta" id="event-count">Chargement…</span>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">Toutes disciplines</button>
+    <button class="filter-btn" data-filter="Ski de fond">Ski de fond</button>
+    <button class="filter-btn" data-filter="Biathlon">Biathlon</button>
+    <button class="filter-btn" data-filter="Combiné nordique">Combiné nordique</button>
+    <button class="filter-btn" data-filter="Saut à ski">Saut à ski</button>
+  </div>
+
+  <div class="events-grid" id="events-grid">
+    <div class="state-msg"><span class="spinner"></span> Chargement des événements…</div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-title">Légende</span>
+    <div class="legend-items">
+      <span class="legend-item"><span class="legend-dot" style="background:#2ECC71"></span>Public admis</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#E74C3C"></span>Accès restreint</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#F5A623"></span>Restauration sur place</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#95A5A6"></span>Sans restauration</span>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-strip">
+  <div>
+    <div class="cta-text">Venir aux Tuffes</div>
+    <div class="cta-sub">Toutes les infos pratiques : accès, parking, hébergement</div>
+  </div>
+  <button class="cta-btn" onclick="window.open('https://www.ensm.sports.gouv.fr/accueil-hebergement-restauration-cnsnmm/','_blank')">Préparer ma venue →</button>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detail-overlay">
+  <div class="modal" id="detail-modal">
+    <div class="modal-head">
+      <div>
+        <div id="d-sport-tag" style="margin-bottom:5px;"></div>
+        <div id="d-title" style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;text-transform:uppercase;color:white;line-height:1.1;"></div>
+      </div>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row"><div class="modal-lbl">Date</div><div class="modal-val" id="d-date"></div></div>
+      <div class="modal-row"><div class="modal-lbl">Discipline</div><div class="modal-val" id="d-discipline"></div></div>
+      <div class="modal-row"><div class="modal-lbl">Accès public</div><div class="modal-val" id="d-public"></div></div>
+      <div class="modal-row"><div class="modal-lbl">Restauration</div><div class="modal-val" id="d-resto"></div></div>
+      <div class="modal-row" id="d-other-row" style="display:none">
+        <div class="modal-lbl">Infos +</div>
+        <div class="modal-val" id="d-other"></div>
+      </div>
+      <div class="source-box">
+        <div class="source-lbl">Source de l'information</div>
+        <div class="source-link" id="d-source"></div>
+      </div>
+      <div class="modal-disclaimer">
+        Ces informations sont collectées automatiquement ou signalées par la communauté. Vérifiez toujours auprès de la source officielle avant de vous déplacer.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="overlay" id="form-overlay">
+  <div class="modal" style="max-width:540px;">
+    <div class="form-head">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="form-pretitle">Contribution communautaire</div>
+          <div class="form-title">Annoncer un événement</div>
+          <div class="form-sub">Les informations seront examinées avant publication.</div>
+        </div>
+        <button class="modal-close" onclick="closeForm()">✕</button>
+      </div>
+    </div>
+
+    <div class="form-body" id="form-fields">
+      <div class="form-group">
+        <label class="form-label">Nom de l'événement <span class="req">*</span></label>
+        <input class="form-input" type="text" id="f-name" placeholder="ex. Coupe de France FFS — Sprint">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date de début <span class="req">*</span></label>
+          <input class="form-input" type="date" id="f-date-start">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date de fin</label>
+          <input class="form-input" type="date" id="f-date-end">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Discipline <span class="req">*</span></label>
+        <select class="form-select" id="f-sport">
+          <option value="">— Sélectionner —</option>
+          <option>Ski de fond</option>
+          <option>Biathlon</option>
+          <option>Combiné nordique</option>
+          <option>Saut à ski</option>
+          <option>Autre / Plusieurs</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ouverture au public <span class="req">*</span></label>
+        <div class="radio-group" id="rg-public">
+          <label class="radio-opt"><input type="radio" name="pub" value="true"><span class="radio-dot"></span>Oui, public admis</label>
+          <label class="radio-opt"><input type="radio" name="pub" value="false"><span class="radio-dot"></span>Non, accès restreint</label>
+          <label class="radio-opt"><input type="radio" name="pub" value="null"><span class="radio-dot"></span>Je ne sais pas</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Restauration sur place <span class="req">*</span></label>
+        <div class="radio-group" id="rg-resto">
+          <label class="radio-opt"><input type="radio" name="res" value="true"><span class="radio-dot"></span>Oui</label>
+          <label class="radio-opt"><input type="radio" name="res" value="false"><span class="radio-dot"></span>Non</label>
+          <label class="radio-opt"><input type="radio" name="res" value="null"><span class="radio-dot"></span>Je ne sais pas</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lien web (source officielle)</label>
+        <input class="form-input" type="url" id="f-link" placeholder="https://…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Autres informations</label>
+        <textarea class="form-textarea" id="f-other" placeholder="Horaires, inscriptions, remarques…"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="closeForm()">Annuler</button>
+        <button class="btn-submit" onclick="submitForm()">Envoyer →</button>
+      </div>
+    </div>
+
+    <div class="form-success" id="form-success">
+      <div class="form-success-icon">✓</div>
+      <h3>Merci !</h3>
+      <p>Votre contribution a été enregistrée.<br>Elle sera vérifiée avant publication.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// CONFIG SUPABASE — remplacer par vos vraies valeurs
+// ================================================================
+const SUPABASE_URL = 'https://arkbrvzacbereyukqfte.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFya2JydnphY2JlcmV5dWtxZnRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDg3ODUsImV4cCI6MjA5MDUyNDc4NX0.quPd-OGwu0HYjyvbdcdELlMvNieIBkyOuJHbC3TcM9E';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ================================================================
+// HELPERS DATE
+// ================================================================
+const MONTHS_FR = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+const MONTHS_LONG = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+function parseDate(str) {
+  if (!str) return null;
+  return new Date(str + 'T12:00:00');
+}
+
+function dateStatus(startStr, endStr) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const start = parseDate(startStr);
+  const end = endStr ? parseDate(endStr) : start;
+  if (!start) return 'future';
+  if (end < today) return 'past';
+  const diff = (start - today) / 86400000;
+  if (diff <= 14) return 'soon';
+  return 'future';
+}
+
+function formatDateShort(str) {
+  const d = parseDate(str);
+  if (!d) return { day: '?', month: '?' };
+  return { day: String(d.getDate()).padStart(2,'0'), month: MONTHS_FR[d.getMonth()] };
+}
+
+function formatDateLong(startStr, endStr) {
+  const s = parseDate(startStr);
+  if (!s) return '—';
+  const base = `${s.getDate()} ${MONTHS_LONG[s.getMonth()]} ${s.getFullYear()}`;
+  if (endStr && endStr !== startStr) {
+    const e = parseDate(endStr);
+    return `${s.getDate()} – ${e.getDate()} ${MONTHS_LONG[e.getMonth()]} ${e.getFullYear()}`;
+  }
+  return base;
+}
+
+// ================================================================
+// SPORT STYLE
+// ================================================================
+const SPORT_CLASS = {
+  'biathlon': 'biathlon',
+  'saut à ski': 'saut',
+  'saut': 'saut',
+  'combiné nordique': 'combine',
+  'combine': 'combine',
+};
+const SPORT_COLOR = {
+  'biathlon': '#F5A623',
+  'saut': '#9B59B6',
+  'combine': '#2ECC71',
+  '': '#4BA3D9',
+};
+
+function sportClass(sport) {
+  if (!sport) return '';
+  const k = sport.toLowerCase();
+  for (const [key, cls] of Object.entries(SPORT_CLASS)) {
+    if (k.includes(key)) return cls;
+  }
+  return '';
+}
+
+function sportColor(sc) {
+  return SPORT_COLOR[sc] || '#4BA3D9';
+}
+
+// ================================================================
+// RENDER CARDS
+// ================================================================
+let allEvents = [];
+let activeFilter = 'all';
+
+function buildCard(ev) {
+  const ds = dateStatus(ev.date_start, ev.date_end);
+  const { day, month } = formatDateShort(ev.date_start);
+  const sc = sportClass(ev.sport);
+  const isHighlight = ds === 'soon';
+
+  const pubBadge = ev.public_access === true
+    ? `<span class="badge badge-public"><span class="badge-dot"></span>Public admis</span>`
+    : ev.public_access === false
+    ? `<span class="badge badge-nopublic"><span class="badge-dot"></span>Accès restreint</span>`
+    : `<span class="badge badge-noresto"><span class="badge-dot"></span>Accès inconnu</span>`;
+
+  const restoBadge = ev.has_catering === true
+    ? `<span class="badge badge-resto"><span class="badge-dot"></span>Restauration</span>`
+    : ev.has_catering === false
+    ? `<span class="badge badge-noresto"><span class="badge-dot"></span>Sans restauration</span>`
+    : '';
+
+  return `
+    <div class="event-card${isHighlight?' highlight':''}" onclick="openDetail(${ev.id})">
+      <div class="card-top">
+        <div class="card-date ${ds}">
+          <div class="date-day">${day}</div>
+          <div class="date-month">${month}</div>
+        </div>
+        <div class="card-info">
+          <div class="card-sport ${sc}">${ev.sport || 'Nordique'}</div>
+          <div class="card-title">${ev.title}</div>
+          <div class="card-badges">${pubBadge}${restoBadge}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderEvents(events) {
+  const grid = document.getElementById('events-grid');
+  const count = document.getElementById('event-count');
+  if (!events.length) {
+    grid.innerHTML = '<div class="state-msg">Aucun événement trouvé pour ce filtre.</div>';
+    count.textContent = '0 événement';
+    return;
+  }
+  count.textContent = `${events.length} événement${events.length>1?'s':''}`;
+  grid.innerHTML = events.map(buildCard).join('');
+}
+
+// ================================================================
+// LOAD FROM SUPABASE
+// ================================================================
+async function loadEvents() {
+  try {
+    const { data, error } = await sb
+      .from('events')
+      .select('id, title, sport, date_start, date_end, public_access, has_catering, notes, source_name, source_url')
+      .eq('status', 'published')
+      .order('date_start', { ascending: true });
+
+    if (error) throw error;
+    allEvents = data || [];
+    applyFilter(activeFilter);
+  } catch (err) {
+    console.error('Erreur Supabase:', err);
+    document.getElementById('events-grid').innerHTML =
+      '<div class="state-msg">Impossible de charger les événements. Réessayez plus tard.</div>';
+    document.getElementById('event-count').textContent = '';
+  }
+}
+
+function applyFilter(filter) {
+  activeFilter = filter;
+  const filtered = filter === 'all'
+    ? allEvents
+    : allEvents.filter(e => e.sport && e.sport.toLowerCase().includes(filter.toLowerCase()));
+  renderEvents(filtered);
+}
+
+// ================================================================
+// DETAIL MODAL
+// ================================================================
+function openDetail(id) {
+  const ev = allEvents.find(e => e.id === id);
+  if (!ev) return;
+
+  const sc = sportClass(ev.sport);
+  const col = sportColor(sc);
+
+  document.getElementById('d-sport-tag').innerHTML =
+    `<span style="background:${col}22;color:${col};border:1px solid ${col}55;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:2px 9px;border-radius:2px;">${ev.sport||'Nordique'}</span>`;
+  document.getElementById('d-title').textContent = ev.title;
+  document.getElementById('d-date').textContent = formatDateLong(ev.date_start, ev.date_end);
+  document.getElementById('d-discipline').textContent = ev.sport || '—';
+
+  document.getElementById('d-public').innerHTML = ev.public_access === true
+    ? '<span style="color:#2ECC71;font-weight:500;">✓ Ouvert au public</span>'
+    : ev.public_access === false
+    ? '<span style="color:#E74C3C;font-weight:500;">✗ Accès restreint</span>'
+    : '<span style="color:#95A5A6;">Information non disponible</span>';
+
+  document.getElementById('d-resto').innerHTML = ev.has_catering === true
+    ? '<span style="color:#F5A623;font-weight:500;">✓ Restauration disponible sur place</span>'
+    : ev.has_catering === false
+    ? '<span style="color:#95A5A6;">✗ Pas de restauration prévue</span>'
+    : '<span style="color:#95A5A6;">Information non disponible</span>';
+
+  const otherRow = document.getElementById('d-other-row');
+  if (ev.notes) {
+    document.getElementById('d-other').textContent = ev.notes;
+    otherRow.style.display = 'flex';
+  } else {
+    otherRow.style.display = 'none';
+  }
+
+  const srcName = ev.source_name || 'Source inconnue';
+  const srcUrl  = ev.source_url  || null;
+  document.getElementById('d-source').innerHTML = srcUrl
+    ? `<a href="${srcUrl}" target="_blank" rel="noopener">${srcName}<br><span style="font-size:10px;opacity:.65;">${srcUrl}</span></a>`
+    : srcName;
+
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+document.getElementById('detail-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeDetail();
+});
+
+// ================================================================
+// FORM MODAL
+// ================================================================
+function openForm() {
+  document.getElementById('form-fields').style.display = 'flex';
+  document.getElementById('form-success').style.display = 'none';
+  document.getElementById('form-overlay').classList.add('open');
+}
+function closeForm() {
+  document.getElementById('form-overlay').classList.remove('open');
+}
+document.getElementById('form-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeForm();
+});
+
+// Radio buttons
+document.querySelectorAll('.radio-opt').forEach(opt => {
+  opt.addEventListener('click', function() {
+    const name = this.querySelector('input').name;
+    document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+      r.closest('.radio-opt').classList.remove('sel');
+    });
+    this.classList.add('sel');
+    this.querySelector('input').checked = true;
+  });
+});
+
+function getRadioValue(name) {
+  const checked = document.querySelector(`input[name="${name}"]:checked`);
+  if (!checked) return null;
+  if (checked.value === 'true')  return true;
+  if (checked.value === 'false') return false;
+  return null;
+}
+
+async function submitForm() {
+  const name = document.getElementById('f-name').value.trim();
+  const sport = document.getElementById('f-sport').value;
+  const dateStart = document.getElementById('f-date-start').value;
+
+  if (!name || !sport || !dateStart) {
+    alert('Merci de remplir les champs obligatoires : nom, discipline et date de début.');
+    return;
+  }
+
+  const payload = {
+    title:          name,
+    sport:          sport,
+    date_start:     dateStart,
+    date_end:       document.getElementById('f-date-end').value || null,
+    public_access:  getRadioValue('pub'),
+    has_catering:   getRadioValue('res'),
+    source_url:     document.getElementById('f-link').value.trim() || null,
+    notes:          document.getElementById('f-other').value.trim() || null,
+    status:         'pending',
+    source_type:    'community',
+  };
+
+  try {
+    const { error } = await sb.from('events').insert([payload]);
+    if (error) throw error;
+    document.getElementById('form-fields').style.display = 'none';
+    document.getElementById('form-success').style.display = 'block';
+  } catch (err) {
+    console.error('Erreur soumission:', err);
+    alert('Une erreur est survenue. Réessayez dans quelques instants.');
+  }
+}
+
+// ================================================================
+// FILTERS
+// ================================================================
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    applyFilter(this.dataset.filter);
+  });
+});
+
+// ================================================================
+// SNOWFLAKES
+// ================================================================
+const sc2 = document.getElementById('snowflakes');
+for (let i = 0; i < 18; i++) {
+  const f = document.createElement('div');
+  f.className = 'flake';
+  const sz = Math.random()*3+2;
+  f.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-duration:${Math.random()*7+4}s;animation-delay:${Math.random()*6}s;opacity:${Math.random()*0.4+0.2};`;
+  sc2.appendChild(f);
+}
+
+// ================================================================
+// INIT
+// ================================================================
+loadEvents();
+</script>
+</body>
+</html>
