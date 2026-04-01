@@ -7,47 +7,55 @@
   <meta name="description" content="Calendrier non officiel des compétitions et événements au Stade Nordique des Tuffes, Prémanon. Ski de fond, biathlon, combiné nordique, saut à ski.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,400&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
   <style>
     :root {
-      --ice: #E8F4FF;
-      --frost: #B8D9F5;
-      --sky: #4BA3D9;
-      --deep: #1B5E8A;
-      --night: #0D2B3E;
-      --snow: #F5F9FF;
-      --accent: #E8302A;
-      --accent2: #F5A623;
+      --bg: #0D2B3E;
+      --surface: #0F2F47;
+      --text: #F5F9FF;
       --muted: #6B9DB8;
+      --accent: #E8302A;
+      --sky: #4BA3D9;
+      --frost: #B8D9F5;
+      --deep: #1B5E8A;
+      --biathlon: #C41E3A;
+      --fond: #1A6B3A;
+      --combine: #4A2D8A;
+      --saut: #B86800;
+      --para: #C41E7A;
+      --border: rgba(75,163,217,0.22);
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Barlow', sans-serif; background: var(--night); color: var(--snow); min-height: 100vh; overflow-x: hidden; }
+    body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
     /* ---- DISCLAIMER ---- */
     .disclaimer {
-      background: rgba(245,166,35,0.1);
-      border-bottom: 1px solid rgba(245,166,35,0.3);
-      padding: 8px 24px;
+      background: rgba(245,166,35,0.08);
+      border-bottom: 1px solid rgba(245,166,35,0.25);
+      padding: 8px 32px;
       display: flex; align-items: center; gap: 10px;
-      font-size: 12px; color: var(--accent2);
+      font-size: 11px; color: #F5A623;
+      font-family: 'Barlow', sans-serif;
     }
     .disclaimer-icon {
-      width: 15px; height: 15px; border: 1.5px solid currentColor;
+      width: 14px; height: 14px; border: 1px solid currentColor;
       border-radius: 50%; display: inline-flex; align-items: center;
-      justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0;
+      justify-content: center; font-size: 8px; font-weight: 700; flex-shrink: 0;
     }
-    .disclaimer a { color: var(--accent2); }
+    .disclaimer a { color: #F5A623; text-decoration: none; }
+    .disclaimer a:hover { text-decoration: underline; }
 
     /* ---- HERO ---- */
     .hero {
-      position: relative; min-height: 320px;
+      position: relative; min-height: 380px;
       background: linear-gradient(160deg, #0D2B3E 0%, #1B5E8A 55%, #4BA3D9 100%);
       overflow: hidden; display: flex; flex-direction: column;
-      justify-content: flex-end; padding: 0 0 28px;
+      justify-content: flex-end; padding: 0 0 44px;
     }
     .hero-grid {
       position: absolute; inset: 0; opacity: 0.07;
@@ -65,122 +73,235 @@
     }
     @keyframes fall {
       from { transform: translateY(-20px); opacity: .5; }
-      to   { transform: translateY(340px) translateX(24px); opacity: 0; }
+      to   { transform: translateY(400px) translateX(24px); opacity: 0; }
     }
 
+    .hero-bg-text {
+      position: absolute;
+      bottom: -12px; left: -4px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(130px, 20vw, 240px);
+      font-weight: 400;
+      letter-spacing: -4px;
+      line-height: 0.85;
+      text-transform: uppercase;
+      color: white;
+      opacity: 0.06;
+      white-space: nowrap;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+    }
+
+    /* ---- NAV ---- */
     .nav {
       position: relative; z-index: 10;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 18px 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
       flex-wrap: wrap; gap: 10px;
     }
-    .logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 19px; letter-spacing: 2px; text-transform: uppercase; color: white; line-height: 1; }
-    .logo span { display: block; font-size: 9px; font-weight: 400; letter-spacing: 3px; color: var(--frost); margin-top: 2px; }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .season-badge { background: var(--accent); color: white; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 11px; border-radius: 2px; }
+    .logo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 17px;
+      letter-spacing: 3px; text-transform: uppercase;
+      color: white; line-height: 1;
+    }
+    .logo span {
+      display: block; font-size: 8px; font-weight: 400;
+      letter-spacing: 3px; color: var(--frost); margin-top: 3px;
+      font-family: 'Barlow', sans-serif; text-transform: uppercase;
+    }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .season-badge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 9px; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase; padding: 4px 10px;
+      background: var(--accent); color: white;
+    }
     .btn-announce {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 15px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 8px 16px;
       background: transparent; border: 1px solid var(--frost); color: var(--frost);
-      border-radius: 2px; cursor: pointer; transition: all .15s;
+      cursor: pointer; transition: all .15s;
     }
     .btn-announce:hover { background: white; color: var(--deep); border-color: white; }
 
-    .hero-content { position: relative; z-index: 10; padding: 0 24px; }
-    .discipline-tags { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
-    .tag {
+    /* ---- NAV LINKS ---- */
+    .nav-links { display: flex; align-items: center; gap: 0; }
+    .nav-link {
       font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
-      letter-spacing: 2px; text-transform: uppercase; padding: 3px 9px;
-      border: 1px solid rgba(184,217,245,.35); border-radius: 2px;
-      color: var(--frost); background: rgba(27,94,138,.3);
+      letter-spacing: 2.5px; text-transform: uppercase; padding: 6px 14px;
+      color: var(--frost); text-decoration: none;
+      transition: color .15s, background .15s; border-radius: 2px;
     }
+    .nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
+    .nav-link.active { color: white; background: rgba(75,163,217,0.18); }
+
+    @media (max-width: 720px) {
+      .nav { flex-wrap: wrap; padding: 14px 16px; }
+      .nav-links { order: 3; width: 100%; justify-content: flex-start; padding-top: 8px; }
+      .nav-link { font-size: 9px; padding: 5px 10px 5px 0; }
+    }
+
+    /* ---- HERO CONTENT ---- */
+    .hero-content { position: relative; z-index: 10; padding: 0 32px; }
+    .discipline-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+    .tag {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600;
+      letter-spacing: 3px; text-transform: uppercase; padding: 3px 9px;
+      border: 1px solid rgba(184,217,245,0.35); color: var(--frost);
+      background: rgba(27,94,138,0.3);
+    }
+
     .hero-title {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
-      font-size: clamp(40px,7vw,70px); line-height: .9;
-      text-transform: uppercase; letter-spacing: -1px; color: white;
+      font-family: 'Bebas Neue', sans-serif;
+      font-weight: 400;
+      font-size: clamp(72px, 12vw, 120px);
+      line-height: 0.88;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+      color: var(--text);
     }
-    .hero-title em { font-style: italic; color: var(--sky); }
-    .hero-jason { margin-top: 5px; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
-    .hero-jason a { color: var(--muted); text-decoration: none; border-bottom: 1px solid rgba(107,157,184,.3); transition: color .15s, border-color .15s; }
-    .hero-jason a:hover { color: var(--frost); border-color: rgba(184,217,245,.5); }
-    .hero-sub { margin-top: 10px; font-size: 13px; color: var(--frost); }
+    .hero-title em { font-style: normal; color: var(--accent); }
+    .hero-jason {
+      margin-top: 12px; font-family: 'Barlow', sans-serif;
+      font-size: 10px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase;
+    }
+    .hero-jason a { color: var(--muted); text-decoration: none; border-bottom: 1px solid rgba(107,157,184,0.3); transition: color .15s; }
+    .hero-jason a:hover { color: var(--frost); }
+    .hero-sub {
+      margin-top: 5px; font-family: 'Barlow', sans-serif;
+      font-size: 10px; color: var(--frost); letter-spacing: 3px; text-transform: uppercase;
+    }
 
     /* ---- SECTION ---- */
-    .section { padding: 32px 24px; }
-    .section-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
-    .section-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; color: white; }
-    .section-line { flex: 1; height: 1px; background: rgba(75,163,217,.22); }
-    .section-meta { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+    .section { padding: 44px 32px; }
+    .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-weight: 400; font-size: 36px; text-transform: uppercase;
+      letter-spacing: 3px; color: var(--text);
+    }
+    .section-line { flex: 1; height: 1px; background: var(--border); }
+    .section-meta {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
+    }
 
     /* ---- FILTERS ---- */
-    .filters { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 20px; }
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; }
     .filter-btn {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 13px; border-radius: 2px;
-      border: 1px solid rgba(75,163,217,.28); background: transparent; color: var(--frost);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 6px 16px;
+      border-radius: 100px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted);
       cursor: pointer; transition: all .15s;
     }
     .filter-btn:hover, .filter-btn.active { background: var(--sky); border-color: var(--sky); color: white; }
-    .filter-btn[data-filter="Ski de fond"]       { color: #4BA3D9; border-color: rgba(75,163,217,.45); }
-    .filter-btn[data-filter="Biathlon"]          { color: #F5A623; border-color: rgba(245,166,35,.45); }
-    .filter-btn[data-filter="Combiné nordique"]  { color: #2ECC71; border-color: rgba(46,204,113,.45); }
-    .filter-btn[data-filter="Saut à ski"]        { color: #9B59B6; border-color: rgba(155,89,182,.45); }
-    .filter-btn[data-filter="Para"]              { color: #E91E8C; border-color: rgba(233,30,140,.45); }
-    .filter-btn[data-filter="Ski de fond"]:hover,  .filter-btn[data-filter="Ski de fond"].active  { background: #4BA3D9; border-color: #4BA3D9; color: white; }
-    .filter-btn[data-filter="Biathlon"]:hover,         .filter-btn[data-filter="Biathlon"].active         { background: #F5A623; border-color: #F5A623; color: white; }
-    .filter-btn[data-filter="Combiné nordique"]:hover, .filter-btn[data-filter="Combiné nordique"].active { background: #2ECC71; border-color: #2ECC71; color: white; }
-    .filter-btn[data-filter="Saut à ski"]:hover,       .filter-btn[data-filter="Saut à ski"].active       { background: #9B59B6; border-color: #9B59B6; color: white; }
-    .filter-btn[data-filter="Para"]:hover,             .filter-btn[data-filter="Para"].active             { background: #E91E8C; border-color: #E91E8C; color: white; }
+    .filter-btn[data-filter="Ski de fond"]:hover,
+    .filter-btn[data-filter="Ski de fond"].active       { background: var(--sky);      color: white; border-color: var(--sky); }
+    .filter-btn[data-filter="Biathlon"]:hover,
+    .filter-btn[data-filter="Biathlon"].active          { background: var(--biathlon); color: white; border-color: var(--biathlon); }
+    .filter-btn[data-filter="Combiné nordique"]:hover,
+    .filter-btn[data-filter="Combiné nordique"].active  { background: var(--combine);  color: white; border-color: var(--combine); }
+    .filter-btn[data-filter="Saut à ski"]:hover,
+    .filter-btn[data-filter="Saut à ski"].active        { background: var(--saut);     color: white; border-color: var(--saut); }
+    .filter-btn[data-filter="Para"]:hover,
+    .filter-btn[data-filter="Para"].active              { background: var(--para);     color: white; border-color: var(--para); }
 
-    /* ---- CARDS ---- */
-    .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; }
-    .event-card {
-      background: rgba(27,94,138,.18); border: 1px solid rgba(75,163,217,.2);
-      border-radius: 4px; overflow: hidden; cursor: pointer;
-      transition: transform .18s, border-color .18s;
+    /* ---- EVENT STRIPS ---- */
+    .events-grid {
+      display: flex; flex-direction: column; gap: 0;
     }
-    .event-card:hover { transform: translateY(-3px); border-color: rgba(75,163,217,.55); }
-    .event-card.highlight { border-color: rgba(232,48,42,.5); }
-    .card-top { display: flex; }
-    .card-date {
-      padding: 13px 11px; text-align: center; min-width: 55px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    .event-strip {
+      display: flex; align-items: center; gap: 0;
+      border-top: 1px solid var(--border);
+      cursor: pointer; transition: background .12s;
+      position: relative;
     }
-    .card-date.past   { background: var(--deep); }
-    .card-date.soon   { background: var(--accent); }
-    .card-date.future { background: #2A5B7A; }
-    .date-day   { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 24px; line-height: 1; color: white; }
-    .date-month { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,.75); margin-top: 2px; }
-    .card-info  { padding: 11px 13px; flex: 1; }
-    .card-sport { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--sky); margin-bottom: 3px; }
-    .card-sport.biathlon { color: #F5A623; }
-    .card-sport.saut     { color: #9B59B6; }
-    .card-sport.combine  { color: #2ECC71; }
-    .card-sport.para     { color: #E91E8C; }
-    .card-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; color: white; line-height: 1.2; margin-bottom: 7px; }
-    .card-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+    .event-strip:last-child { border-bottom: 1px solid var(--border); }
+    .event-strip:hover { background: rgba(240,237,230,0.03); }
+    .event-strip.highlight { border-left: 3px solid var(--accent); }
+
+    .strip-date {
+      min-width: 100px; padding: 16px 24px 16px 20px;
+      display: flex; flex-direction: column; align-items: flex-start;
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .strip-day {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(44px, 5vw, 60px); font-weight: 400;
+      line-height: 1; color: var(--text);
+      letter-spacing: -1px;
+    }
+    .strip-day.past { color: var(--muted); }
+    .strip-month {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 9px; font-weight: 600; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--muted);
+      margin-top: -2px;
+    }
+
+    .strip-body {
+      flex: 1; padding: 16px 24px;
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .strip-discipline-badge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 8px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; padding: 3px 10px;
+      border-radius: 100px; flex-shrink: 0;
+      color: var(--text);
+    }
+    .strip-discipline-badge.biathlon { background: var(--biathlon); }
+    .strip-discipline-badge.fond     { background: var(--fond); }
+    .strip-discipline-badge.combine  { background: var(--combine); }
+    .strip-discipline-badge.saut     { background: var(--saut); }
+    .strip-discipline-badge.para     { background: var(--para); }
+    .strip-discipline-badge.default  { background: rgba(240,237,230,0.15); color: var(--muted); }
+
+    .strip-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px; font-weight: 700;
+      color: var(--text); line-height: 1.2;
+      flex: 1; min-width: 140px;
+    }
+    .strip-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .strip-urgency {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 8px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      background: var(--accent); color: white;
+      padding: 3px 10px; border-radius: 100px; flex-shrink: 0;
+    }
+
+    /* ---- BADGES ---- */
     .badge {
       display: inline-flex; align-items: center; gap: 4px;
-      font-size: 10px; padding: 2px 6px; border-radius: 2px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 9px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; padding: 2px 8px; border-radius: 100px;
     }
-    .badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-    .badge-public  { background: rgba(46,204,113,.12); color: #2ECC71; border: 1px solid rgba(46,204,113,.28); }
-    .badge-nopublic{ background: rgba(231,76,60,.12);  color: #E74C3C; border: 1px solid rgba(231,76,60,.28); }
-    .badge-resto   { background: rgba(245,166,35,.12); color: #F5A623; border: 1px solid rgba(245,166,35,.28); }
-    .badge-noresto { background: rgba(149,165,166,.08);color: #95A5A6; border: 1px solid rgba(149,165,166,.18);}
-    .badge-public  .badge-dot { background: #2ECC71; }
-    .badge-nopublic.badge-dot { background: #E74C3C; }
-    .badge-resto   .badge-dot { background: #F5A623; }
-    .badge-noresto .badge-dot { background: #95A5A6; }
+    .badge-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+    .badge-public   { background: rgba(26,107,58,0.25);  color: #6ee7a0; border: 1px solid rgba(26,107,58,0.45); }
+    .badge-nopublic { background: rgba(196,30,58,0.18);  color: #f87171; border: 1px solid rgba(196,30,58,0.35); }
+    .badge-resto    { background: rgba(184,104,0,0.2);   color: #fbbf24; border: 1px solid rgba(184,104,0,0.35); }
+    .badge-noresto  { background: rgba(240,237,230,0.04); color: var(--muted); border: 1px solid var(--border); }
+    .badge-public .badge-dot   { background: #6ee7a0; }
+    .badge-nopublic .badge-dot { background: #f87171; }
+    .badge-resto .badge-dot    { background: #fbbf24; }
+    .badge-noresto .badge-dot  { background: var(--muted); }
 
     /* Loading / empty */
     .state-msg {
-      grid-column: 1/-1; padding: 40px; text-align: center;
-      color: var(--muted); font-size: 14px; font-style: italic;
+      padding: 56px 32px; text-align: center;
+      color: var(--muted); font-family: 'Barlow', sans-serif;
+      font-size: 13px; font-style: italic;
     }
     .spinner {
-      display: inline-block; width: 20px; height: 20px;
-      border: 2px solid rgba(75,163,217,.3); border-top-color: var(--sky);
+      display: inline-block; width: 16px; height: 16px;
+      border: 1.5px solid rgba(240,237,230,0.12); border-top-color: var(--muted);
       border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px;
       vertical-align: middle;
     }
@@ -188,239 +309,242 @@
 
     /* ---- LEGEND ---- */
     .legend {
-      margin-top: 24px; padding: 14px 18px;
-      background: rgba(13,43,62,.5); border: 1px solid rgba(75,163,217,.13);
-      border-radius: 4px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+      margin-top: 36px; padding: 16px 0;
+      border-top: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 20px; align-items: center;
     }
-    .legend-title { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
-    .legend-items { display: flex; flex-wrap: wrap; gap: 14px; }
-    .legend-item  { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--frost); }
-    .legend-dot   { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .legend-title {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 9px;
+      font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--muted);
+    }
+    .legend-items { display: flex; flex-wrap: wrap; gap: 20px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-family: 'Barlow', sans-serif; font-size: 10px; color: var(--muted); }
+    .legend-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
     /* ---- CTA STRIP ---- */
     .cta-strip {
-      margin: 0 24px 36px;
-      background: linear-gradient(100deg, var(--sky) 0%, var(--deep) 100%);
-      border-radius: 4px; padding: 20px 24px;
+      margin: 0 32px 56px;
+      border: 1px solid var(--border);
+      padding: 28px 32px;
       display: flex; align-items: center; justify-content: space-between;
       flex-wrap: wrap; gap: 14px;
     }
-    .cta-text { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; color: white; }
-    .cta-sub  { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
-    .cta-btn  {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600;
-      letter-spacing: 2px; text-transform: uppercase; padding: 10px 20px;
-      background: white; color: var(--deep); border: none; border-radius: 2px;
+    .cta-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-weight: 400; font-size: 30px; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--text);
+    }
+    .cta-sub { font-family: 'Barlow', sans-serif; font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .cta-btn {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 11px 26px;
+      background: var(--text); color: var(--bg); border: none;
       cursor: pointer; transition: opacity .15s; white-space: nowrap;
+      text-decoration: none; display: inline-block;
     }
     .cta-btn:hover { opacity: .85; }
 
     /* ======= MODAL ======= */
     .overlay {
       position: fixed; inset: 0; z-index: 200;
-      background: rgba(8,22,34,.88);
+      background: rgba(0,0,0,0.88);
       display: flex; align-items: center; justify-content: center; padding: 20px;
       opacity: 0; pointer-events: none; transition: opacity .2s;
     }
     .overlay.open { opacity: 1; pointer-events: all; }
     .modal {
-      background: #0F2F47; border: 1px solid rgba(75,163,217,.35);
-      border-radius: 6px; width: 100%; max-width: 500px;
+      background: var(--surface); border: 1px solid var(--border);
+      width: 100%; max-width: 500px;
       max-height: 90vh; overflow-y: auto;
       transform: translateY(14px); transition: transform .22s;
     }
     .overlay.open .modal { transform: translateY(0); }
     .modal-head {
       display: flex; align-items: flex-start; justify-content: space-between;
-      padding: 20px 22px 14px; border-bottom: 1px solid rgba(75,163,217,.16);
+      padding: 24px 28px 18px; border-bottom: 1px solid var(--border);
     }
     .modal-close {
       background: none; border: none; color: var(--muted); font-size: 18px;
       cursor: pointer; padding: 0; margin-left: 12px; line-height: 1;
       transition: color .15s;
     }
-    .modal-close:hover { color: white; }
-    .modal-body { padding: 18px 22px 22px; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 20px 28px 28px; }
     .modal-row {
-      display: flex; gap: 10px; padding: 10px 0;
-      border-bottom: 1px solid rgba(75,163,217,.1);
+      display: flex; gap: 16px; padding: 12px 0;
+      border-bottom: 1px solid var(--border);
     }
     .modal-row:last-child { border-bottom: none; }
     .modal-lbl {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
-      font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 9px;
+      font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
       color: var(--muted); min-width: 100px; padding-top: 2px;
     }
-    .modal-val { font-size: 13px; color: var(--snow); flex: 1; line-height: 1.5; }
-    .modal-val a { color: var(--sky); text-decoration: none; border-bottom: 1px solid rgba(75,163,217,.35); }
-    .modal-val a:hover { border-color: var(--sky); }
+    .modal-val { font-family: 'Barlow', sans-serif; font-size: 13px; color: var(--text); flex: 1; line-height: 1.5; }
+    .modal-val a { color: var(--accent); text-decoration: none; }
+    .modal-val a:hover { text-decoration: underline; }
     .source-box {
-      margin-top: 16px; background: rgba(13,43,62,.7);
-      border: 1px solid rgba(75,163,217,.18); border-radius: 4px; padding: 13px 15px;
+      margin-top: 20px; background: rgba(240,237,230,0.03);
+      border: 1px solid var(--border); padding: 14px 18px;
     }
-    .source-lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
-    .source-link { font-size: 12px; color: var(--sky); word-break: break-all; }
-    .source-link a { color: var(--sky); text-decoration: none; }
+    .source-lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .source-link { font-family: 'Barlow', sans-serif; font-size: 12px; color: var(--accent); word-break: break-all; }
+    .source-link a { color: var(--accent); text-decoration: none; }
     .mod-req-btn {
-      margin-top: 14px; width: 100%; padding: 9px 16px;
-      background: transparent; border: 1px solid rgba(75,163,217,.35);
-      border-radius: 3px; color: var(--frost);
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
-      font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+      margin-top: 18px; width: 100%; padding: 11px 16px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
+      font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
       cursor: pointer; transition: all .15s; display: block;
     }
-    .mod-req-btn:hover { background: rgba(75,163,217,.12); border-color: var(--sky); color: white; }
+    .mod-req-btn:hover { border-color: var(--text); color: var(--text); }
     .modal-disclaimer {
-      margin-top: 13px; font-size: 11px; color: var(--muted);
-      font-style: italic; line-height: 1.5; padding-top: 10px;
-      border-top: 1px solid rgba(75,163,217,.1);
+      margin-top: 14px; font-family: 'Barlow', sans-serif; font-size: 11px; color: var(--muted);
+      font-style: italic; line-height: 1.6; padding-top: 12px;
+      border-top: 1px solid var(--border);
     }
 
     /* ======= FORM MODAL ======= */
-    .form-head { padding: 20px 22px 14px; border-bottom: 1px solid rgba(75,163,217,.16); }
-    .form-pretitle { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--sky); margin-bottom: 3px; }
-    .form-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; text-transform: uppercase; color: white; }
-    .form-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
-    .form-body { padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 14px; }
-    .form-group { display: flex; flex-direction: column; gap: 4px; }
-    .form-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--frost); }
+    .form-head { padding: 24px 28px 18px; border-bottom: 1px solid var(--border); }
+    .form-pretitle { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .form-title { font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 26px; text-transform: uppercase; letter-spacing: 2px; color: var(--text); }
+    .form-sub { font-family: 'Barlow', sans-serif; font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .form-body { padding: 20px 28px 28px; display: flex; flex-direction: column; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
     .req { color: var(--accent); }
     .form-input, .form-select, .form-textarea {
-      background: rgba(13,43,62,.8); border: 1px solid rgba(75,163,217,.28);
-      border-radius: 3px; color: var(--snow); font-family: 'Barlow', sans-serif;
-      font-size: 13px; padding: 8px 11px; outline: none; width: 100%;
+      background: rgba(240,237,230,0.04); border: 1px solid var(--border);
+      color: var(--text); font-family: 'Barlow', sans-serif;
+      font-size: 13px; padding: 10px 14px; outline: none; width: 100%;
       transition: border-color .15s;
     }
-    .form-input:focus,.form-select:focus,.form-textarea:focus { border-color: var(--sky); }
-    .form-select option { background: #0F2F47; }
-    .form-textarea { resize: vertical; min-height: 70px; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: rgba(240,237,230,0.35); }
+    .form-select option { background: var(--surface); }
+    .form-textarea { resize: vertical; min-height: 80px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
     .radio-opt {
-      display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--frost);
-      cursor: pointer; padding: 6px 12px; border: 1px solid rgba(75,163,217,.28);
-      border-radius: 3px; transition: all .15s; user-select: none;
+      display: flex; align-items: center; gap: 6px; font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; letter-spacing: 1px; color: var(--muted);
+      cursor: pointer; padding: 7px 14px; border: 1px solid var(--border);
+      transition: all .15s; user-select: none;
     }
     .radio-opt input { display: none; }
-    .radio-opt.sel { background: rgba(75,163,217,.16); border-color: var(--sky); color: white; }
-    .radio-dot { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--muted); flex-shrink: 0; transition: all .15s; }
-    .radio-opt.sel .radio-dot { background: var(--sky); border-color: var(--sky); }
-    .form-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 2px; }
+    .radio-opt.sel { border-color: rgba(240,237,230,0.35); color: var(--text); background: rgba(240,237,230,0.05); }
+    .radio-dot { width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid var(--muted); flex-shrink: 0; transition: all .15s; }
+    .radio-opt.sel .radio-dot { background: var(--text); border-color: var(--text); }
+    .form-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
     .btn-cancel {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 18px;
-      background: transparent; border: 1px solid rgba(75,163,217,.28); color: var(--frost);
-      border-radius: 2px; cursor: pointer; transition: border-color .15s;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 10px 20px;
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      cursor: pointer; transition: all .15s;
     }
-    .btn-cancel:hover { border-color: var(--frost); }
+    .btn-cancel:hover { border-color: var(--muted); color: var(--text); }
     .btn-submit {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 22px;
-      background: var(--sky); border: none; color: white; border-radius: 2px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 10px 24px;
+      background: var(--text); border: none; color: var(--bg);
       cursor: pointer; transition: opacity .15s;
     }
     .btn-submit:hover { opacity: .85; }
-    .form-hint { font-size: 11px; color: var(--muted); margin-top: 3px; font-style: italic; line-height: 1.4; }
+    .form-hint { font-family: 'Barlow', sans-serif; font-size: 10px; color: var(--muted); margin-top: 3px; font-style: italic; line-height: 1.4; }
 
-    .form-success {
-      padding: 24px; text-align: center; display: none;
-    }
-    .form-success-icon { font-size: 32px; margin-bottom: 10px; }
-    .form-success h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; text-transform: uppercase; color: white; margin-bottom: 6px; }
-    .form-success p { font-size: 13px; color: var(--muted); }
+    .form-success { padding: 36px; text-align: center; display: none; }
+    .form-success-icon { font-size: 26px; margin-bottom: 12px; }
+    .form-success h3 { font-family: 'Bebas Neue', sans-serif; font-size: 26px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; color: var(--text); margin-bottom: 8px; }
+    .form-success p { font-family: 'Barlow', sans-serif; font-size: 13px; color: var(--muted); }
 
-    /* ---- NAV LINKS ---- */
-    .nav-links { display: flex; align-items: center; gap: 2px; }
-    .nav-link {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 11px;
-      color: var(--frost); text-decoration: none; border-radius: 2px;
-      transition: background .15s, color .15s;
-    }
-    .nav-link:hover { background: rgba(255,255,255,.1); color: white; }
-    .nav-link.active { color: white; background: rgba(75,163,217,.18); }
-
-    @media (max-width: 720px) {
-      .nav { flex-wrap: wrap; }
-      .nav-links { order: 3; width: 100%; justify-content: flex-start; padding-top: 4px; }
-      .nav-link { font-size: 10px; padding: 4px 8px; }
-    }
-
-    /* ---- NEWS PREVIEW ---- */
-    .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 10px; }
-    .news-card {
-      background: rgba(27,94,138,.15); border: 1px solid rgba(75,163,217,.18);
-      border-radius: 4px; padding: 12px 14px;
-      display: flex; flex-direction: column; gap: 6px;
-      text-decoration: none; transition: border-color .18s, transform .18s;
-    }
-    .news-card:hover { border-color: rgba(75,163,217,.5); transform: translateY(-2px); }
-    .news-card.tuffes { border-color: rgba(245,166,35,.4); }
-    .news-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .news-source {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; color: var(--sky);
-    }
-    .news-date { font-size: 10px; color: var(--muted); }
-    .news-badge {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700;
-      letter-spacing: 1px; text-transform: uppercase;
-      background: rgba(245,166,35,.15); color: var(--accent2);
-      border: 1px solid rgba(245,166,35,.3); border-radius: 2px; padding: 1px 5px;
-    }
-    .news-title {
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px;
-      color: white; line-height: 1.2;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    }
-    .news-read {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
-      letter-spacing: 1px; text-transform: uppercase; color: var(--sky); margin-top: auto;
-    }
-    .btn-voir-plus {
-      display: inline-block; margin-top: 20px;
-      font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 20px;
-      border: 1px solid var(--sky); color: var(--sky); border-radius: 2px;
-      text-decoration: none; transition: background .15s, color .15s;
-    }
-    .btn-voir-plus:hover { background: var(--sky); color: white; }
     /* ---- UPCOMING / PAST HEADERS ---- */
-    .sub-header {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 14px; margin-top: 4px;
-    }
+    .sub-header { display: flex; align-items: center; gap: 12px; margin-bottom: 0; }
     .sub-title {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600;
-      letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 3px; text-transform: uppercase; color: var(--muted);
     }
-    .sub-line { flex: 1; height: 1px; background: rgba(75,163,217,.14); }
+    .sub-line { flex: 1; height: 1px; background: var(--border); }
 
     /* ---- PAST TOGGLE ---- */
     .past-toggle {
-      display: flex; align-items: center; gap: 10px; width: 100%;
-      background: rgba(27,94,138,.12); border: 1px solid rgba(75,163,217,.16);
-      border-radius: 4px; padding: 13px 16px; cursor: pointer; margin-top: 20px;
-      color: var(--frost); text-align: left; transition: background .15s;
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      background: transparent; border: none; border-top: 1px solid var(--border);
+      padding: 16px 0; cursor: pointer; margin-top: 0;
+      color: var(--muted); text-align: left; transition: color .15s;
     }
-    .past-toggle:hover { background: rgba(27,94,138,.24); border-color: rgba(75,163,217,.3); }
+    .past-toggle:hover { color: var(--text); }
     .past-toggle-label {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase; color: var(--frost);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 3px; text-transform: uppercase; color: inherit;
     }
-    .past-toggle-count {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
-      color: var(--muted); letter-spacing: 1px;
-    }
-    .past-toggle-chevron {
-      margin-left: auto; font-size: 11px; color: var(--muted);
-      transition: transform .22s;
-    }
+    .past-toggle-count { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; color: inherit; letter-spacing: 1px; }
+    .past-toggle-chevron { margin-left: auto; font-size: 10px; color: inherit; transition: transform .22s; }
     .past-toggle.open .past-toggle-chevron { transform: rotate(180deg); }
-    .past-grid-wrapper { padding-top: 12px; }
+    .past-grid-wrapper { padding-top: 0; }
 
-    @media (max-width: 520px) {
+    /* ---- NEWS ---- */
+    .news-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .news-card {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 8px;
+      text-decoration: none; transition: border-color .15s;
+    }
+    .news-card:hover { border-color: rgba(240,237,230,0.28); }
+    .news-card.tuffes { border-color: rgba(232,67,10,0.28); }
+    .news-card-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .news-source {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    }
+    .news-date { font-family: 'Barlow', sans-serif; font-size: 10px; color: var(--accent); }
+    .news-badge {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 8px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      background: rgba(232,67,10,0.12); color: var(--accent);
+      border: 1px solid rgba(232,67,10,0.25); padding: 1px 6px;
+    }
+    .news-title {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px;
+      color: var(--text); line-height: 1.2;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .news-read {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: auto;
+    }
+    .news-card:hover .news-read { color: var(--text); }
+    .btn-voir-plus {
+      display: inline-block; margin-top: 24px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 10px 24px;
+      border: 1px solid var(--border); color: var(--muted);
+      text-decoration: none; transition: border-color .15s, color .15s;
+    }
+    .btn-voir-plus:hover { border-color: var(--text); color: var(--text); }
+
+    /* form-submit used in mod modal */
+    .form-submit {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 11px 24px;
+      background: var(--text); border: none; color: var(--bg);
+      cursor: pointer; transition: opacity .15s; width: 100%;
+    }
+    .form-submit:hover { opacity: .85; }
+
+    @media (max-width: 640px) {
+      .section { padding: 28px 16px; }
+      .hero-content { padding: 0 16px; }
+      .nav { padding: 14px 16px; }
+      .hero { padding: 0 0 32px; }
+      .hero-title { font-size: 48px; letter-spacing: -1px; }
+      .strip-day { font-size: 40px; }
+      .strip-date { min-width: 72px; padding: 12px 14px; }
+      .strip-body { padding: 12px 16px; gap: 10px; }
+      .strip-title { font-size: 16px; }
+      .news-grid { grid-template-columns: 1fr; }
       .form-row { grid-template-columns: 1fr; }
-      .cta-strip { flex-direction: column; }
+      .cta-strip { flex-direction: column; align-items: flex-start; margin: 0 16px 36px; }
     }
   </style>
   <!-- Google Analytics -->
@@ -448,9 +572,8 @@
 <div class="hero">
   <div class="hero-grid"></div>
   <div class="snowflakes" id="snowflakes"></div>
-  <svg class="mountain" viewBox="0 0 1200 200" preserveAspectRatio="none">
-    <polygon points="0,200 150,80 280,140 400,40 520,120 640,20 760,100 880,50 1000,110 1100,60 1200,90 1200,200" fill="white"/>
-  </svg>
+
+  <div class="hero-bg-text">Nordique</div>
 
   <nav class="nav">
     <div class="logo">
@@ -522,11 +645,10 @@
   <div class="legend">
     <span class="legend-title">Légende</span>
     <div class="legend-items">
-      <span class="legend-item"><span class="legend-dot" style="background:#2ECC71"></span>Public admis</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#E74C3C"></span>Accès restreint</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#F5A623"></span>Restauration sur place</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#95A5A6"></span>Sans restauration</span>
-      <span class="legend-item"><span style="display:inline-block;width:12px;height:12px;background:#E8302A;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>Date imminente (&lt; 14 jours)</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#6ee7a0"></span>Public admis</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#f87171"></span>Accès restreint</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#fbbf24"></span>Restauration sur place</span>
+      <span class="legend-item"><span style="display:inline-block;width:10px;height:10px;background:var(--accent);border-radius:100px;vertical-align:middle;margin-right:4px;"></span>Date imminente (&lt; 14 jours)</span>
     </div>
   </div>
 </div>
@@ -560,8 +682,8 @@
   <div class="modal" id="detail-modal">
     <div class="modal-head">
       <div>
-        <div id="d-sport-tag" style="margin-bottom:5px;"></div>
-        <div id="d-title" style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;text-transform:uppercase;color:white;line-height:1.1;"></div>
+        <div id="d-sport-tag" style="margin-bottom:6px;"></div>
+        <div id="d-title" style="font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:24px;text-transform:uppercase;letter-spacing:1px;color:var(--text);line-height:1.1;"></div>
       </div>
       <button class="modal-close" onclick="closeDetail()">✕</button>
     </div>
@@ -591,8 +713,8 @@
   <div class="modal" style="max-width:480px;">
     <div class="modal-head">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Signalement</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;text-transform:uppercase;color:white;line-height:1.1;">Demande de modification</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Signalement</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:22px;text-transform:uppercase;letter-spacing:1px;color:var(--text);line-height:1.1;">Demande de modification</div>
       </div>
       <button class="modal-close" onclick="closeModRequest()">✕</button>
     </div>
@@ -608,10 +730,10 @@
       </div>
       <button class="form-submit" onclick="submitModRequest()">Envoyer la demande</button>
     </div>
-    <div id="mod-success" style="display:none;padding:28px 22px;text-align:center;">
-      <div style="font-size:28px;margin-bottom:10px;">✓</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:white;margin-bottom:6px;">Demande envoyée !</div>
-      <div style="font-size:13px;color:var(--muted);">Merci pour votre contribution. Nous examinerons votre demande rapidement.</div>
+    <div id="mod-success" style="display:none;padding:32px 28px;text-align:center;">
+      <div style="font-size:24px;margin-bottom:10px;">✓</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:20px;letter-spacing:1px;text-transform:uppercase;color:var(--text);margin-bottom:6px;">Demande envoyée !</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:13px;color:var(--muted);">Merci pour votre contribution. Nous examinerons votre demande rapidement.</div>
     </div>
   </div>
 </div>
@@ -702,7 +824,7 @@
 
 <script>
 // ================================================================
-// CONFIG SUPABASE — remplacer par vos vraies valeurs
+// CONFIG SUPABASE
 // ================================================================
 const SUPABASE_URL = 'https://arkbrvzacbereyukqfte.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFya2JydnphY2JlcmV5dWtxZnRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDg3ODUsImV4cCI6MjA5MDUyNDc4NX0.quPd-OGwu0HYjyvbdcdELlMvNieIBkyOuJHbC3TcM9E';
@@ -758,14 +880,16 @@ const SPORT_CLASS = {
   'saut': 'saut',
   'combiné nordique': 'combine',
   'combine': 'combine',
+  'fond': 'fond',
   'para': 'para',
 };
 const SPORT_COLOR = {
-  'biathlon': '#F5A623',
-  'saut': '#9B59B6',
-  'combine': '#2ECC71',
-  'para': '#E91E8C',
-  '': '#4BA3D9',
+  'biathlon': '#C41E3A',
+  'saut': '#B86800',
+  'combine': '#4A2D8A',
+  'fond': '#1A6B3A',
+  'para': '#C41E7A',
+  '': '#E8430A',
 };
 
 function sportClass(sport) {
@@ -778,11 +902,11 @@ function sportClass(sport) {
 }
 
 function sportColor(sc) {
-  return SPORT_COLOR[sc] || '#4BA3D9';
+  return SPORT_COLOR[sc] || '#E8430A';
 }
 
 // ================================================================
-// RENDER CARDS
+// RENDER CARDS — horizontal strip layout
 // ================================================================
 let allEvents = [];
 let activeFilter = 'all';
@@ -792,31 +916,32 @@ function buildCard(ev) {
   const { day, month } = formatDateShort(ev.date_start);
   const sc = sportClass(ev.sport);
   const isHighlight = ds === 'soon';
+  const badgeClass = sc || 'default';
 
   const pubBadge = ev.public_access === true
-    ? `<span class="badge badge-public"><span class="badge-dot"></span>Public admis</span>`
+    ? `<span class="badge badge-public"><span class="badge-dot"></span>Public</span>`
     : ev.public_access === false
-    ? `<span class="badge badge-nopublic"><span class="badge-dot"></span>Accès restreint</span>`
-    : `<span class="badge badge-noresto"><span class="badge-dot"></span>Accès inconnu</span>`;
+    ? `<span class="badge badge-nopublic"><span class="badge-dot"></span>Restreint</span>`
+    : '';
 
   const restoBadge = ev.has_catering === true
     ? `<span class="badge badge-resto"><span class="badge-dot"></span>Restauration</span>`
-    : ev.has_catering === false
-    ? `<span class="badge badge-noresto"><span class="badge-dot"></span>Sans restauration</span>`
+    : '';
+
+  const urgencyBadge = isHighlight
+    ? `<span class="strip-urgency">Imminent</span>`
     : '';
 
   return `
-    <div class="event-card${isHighlight?' highlight':''}" onclick="openDetail(${ev.id})">
-      <div class="card-top">
-        <div class="card-date ${ds}">
-          <div class="date-day">${day}</div>
-          <div class="date-month">${month}</div>
-        </div>
-        <div class="card-info">
-          <div class="card-sport ${sc}">${ev.sport || 'Nordique'}</div>
-          <div class="card-title">${ev.title}</div>
-          <div class="card-badges">${pubBadge}${restoBadge}</div>
-        </div>
+    <div class="event-strip${isHighlight?' highlight':''}" onclick="openDetail(${ev.id})">
+      <div class="strip-date">
+        <span class="strip-day${ds==='past'?' past':''}">${day}</span>
+        <span class="strip-month">${month}</span>
+      </div>
+      <div class="strip-body">
+        <span class="strip-discipline-badge ${badgeClass}">${ev.sport || 'Nordique'}</span>
+        <div class="strip-title">${ev.title}</div>
+        <div class="strip-badges">${pubBadge}${restoBadge}${urgencyBadge}</div>
       </div>
     </div>`;
 }
@@ -886,7 +1011,7 @@ async function loadLatestArticles() {
           <div class="news-card-meta">
             <span class="news-source">${a.source_name||''}</span>
             <span class="news-date">${dateStr}</span>
-            ${a.mentions_tuffes ? '<span class="news-badge">⛰ Tuffes</span>' : ''}
+            ${a.mentions_tuffes ? '<span class="news-badge">Tuffes</span>' : ''}
           </div>
           <div class="news-title">${a.title||''}</div>
           <span class="news-read">Lire l'article →</span>
@@ -941,22 +1066,22 @@ function openDetail(id) {
   const col = sportColor(sc);
 
   document.getElementById('d-sport-tag').innerHTML =
-    `<span style="background:${col}22;color:${col};border:1px solid ${col}55;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:2px 9px;border-radius:2px;">${ev.sport||'Nordique'}</span>`;
+    `<span style="background:${col}22;color:${col};border:1px solid ${col}44;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:100px;">${ev.sport||'Nordique'}</span>`;
   document.getElementById('d-title').textContent = ev.title;
   document.getElementById('d-date').textContent = formatDateLong(ev.date_start, ev.date_end);
   document.getElementById('d-discipline').textContent = ev.sport || '—';
 
   document.getElementById('d-public').innerHTML = ev.public_access === true
-    ? '<span style="color:#2ECC71;font-weight:500;">✓ Ouvert au public</span>'
+    ? '<span style="color:#6ee7a0;font-weight:500;">✓ Ouvert au public</span>'
     : ev.public_access === false
-    ? '<span style="color:#E74C3C;font-weight:500;">✗ Accès restreint</span>'
-    : '<span style="color:#95A5A6;">Information non disponible</span>';
+    ? '<span style="color:#f87171;font-weight:500;">✗ Accès restreint</span>'
+    : '<span style="color:var(--muted);">Information non disponible</span>';
 
   document.getElementById('d-resto').innerHTML = ev.has_catering === true
-    ? '<span style="color:#F5A623;font-weight:500;">✓ Restauration disponible sur place</span>'
+    ? '<span style="color:#fbbf24;font-weight:500;">✓ Restauration disponible sur place</span>'
     : ev.has_catering === false
-    ? '<span style="color:#95A5A6;">✗ Pas de restauration prévue</span>'
-    : '<span style="color:#95A5A6;">Information non disponible</span>';
+    ? '<span style="color:var(--muted);">✗ Pas de restauration prévue</span>'
+    : '<span style="color:var(--muted);">Information non disponible</span>';
 
   const otherRow = document.getElementById('d-other-row');
   if (ev.notes) {
@@ -1088,7 +1213,6 @@ async function submitForm() {
     const { error } = await sb.from('events').insert([payload]);
     if (error) throw error;
 
-    // Notification email vers l'admin (FormSubmit.co — 1re utilisation : cliquez le lien de vérification envoyé à cinqcibles@gmail.com)
     const emailContact = document.getElementById('f-email').value.trim();
     const pubVal = getRadioValue('pub');
     const resVal = getRadioValue('res');
@@ -1109,7 +1233,7 @@ async function submitForm() {
         'Email contact':   emailContact || '—',
         'Lien admin':      'https://stadedestuffes.fr/admin.html',
       }),
-    }).catch(() => {}); // Silencieux si email échoue — l'event est quand même enregistré
+    }).catch(() => {});
 
     document.getElementById('form-fields').style.display = 'none';
     document.getElementById('form-success').style.display = 'block';
