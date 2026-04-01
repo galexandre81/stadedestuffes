@@ -264,6 +264,110 @@ def scrape_ffs_events() -> int:
     return inserted
 
 
+# ── Source 1b : FFS calendrier officiel (https://ffs.fr/calendrier/) ───────────
+CALENDRIER_URL = "https://ffs.fr/calendrier/"
+
+def fetch_ffs_calendrier_detail(url: str) -> dict:
+    """Récupère le détail d'un événement FFS (titre/date/place/description)."""
+    try:
+        resp = requests.get(url, timeout=TIMEOUT, headers=HEADERS)
+        resp.raise_for_status()
+    except Exception as exc:
+        log.warning("   FFS detail inaccessible %s : %s", url, exc)
+        return {}
+
+    soup = BeautifulSoup(resp.content, "html.parser")
+    title = (soup.find("h1") or soup.find("h2") or soup.title)
+    title_txt = title.get_text(strip=True) if title else ""
+
+    # contenu textuel pour extraction date / localisation / notes
+    full_text = clean_html(soup.get_text(separator=" ", strip=True))
+    date_str = extract_date_from_text(full_text)
+
+    # note : on prend une partie du texte comme description
+    notes = " ".join(x for x in [
+        title_txt,
+        full_text[:400],
+    ] if x)
+
+    return {
+        "title": title_txt,
+        "date": date_str,
+        "notes": notes,
+        "full_text": full_text,
+    }
+
+
+def scrape_ffs_calendrier_events() -> int:
+    """Scrape le calendrier FFS et ajoute les événements à Prémanon / Les Tuffes."""
+    inserted = 0
+    try:
+        resp = requests.get(CALENDRIER_URL, timeout=TIMEOUT, headers=HEADERS)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.content, "html.parser")
+    except Exception as exc:
+        log.warning("   FFS calendrier inaccessible : %s", exc)
+        return 0
+
+    # Exemples de sélecteurs, robustes sur plusieurs versions de page
+    selectors = [
+        "article", ".agenda-item", ".fc-event", ".calendar-event", ".event-item",
+        ".item", "li",
+    ]
+
+    candidates = []
+    for sel in selectors:
+        candidates.extend(soup.select(sel))
+
+    seen_urls = set()
+    for node in candidates:
+        # lien vers détail potentiellement plus complet
+        link = node.find("a", href=True)
+        url = link["href"].strip() if link else CALENDRIER_URL
+
+        title = node.get_text(separator=" ", strip=True)
+        if not title:
+            continue
+
+        # ne conserver que les événements contenant Prémanon/Les Tuffes
+        if not is_lieu_tuffes(title):
+            continue
+
+        # pour éviter doublons de même lien
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        # extraire infos du détail si possible
+        detail = fetch_ffs_calendrier_detail(url) if url and url != CALENDRIER_URL else {}
+        full_text = " ".join([title, detail.get("full_text", "")])
+        date_event = detail.get("date") or extract_date_from_text(full_text)
+
+        # on exige une date pour éviter le parsing de non-événements
+        if not date_event:
+            continue
+
+        sport = detect_sport(full_text)
+
+        event_title = detail.get("title") or title
+
+        row = make_event_row(
+            title=event_title,
+            date_str=date_event,
+            sport=sport,
+            source_name="FFS calendrier",
+            source_url=url,
+            notes=(detail.get("notes") or title)[:500],
+            status="published",
+        )
+
+        if upsert_event(row):
+            log.info("   + FFS calendrier event : %s (%s)", event_title[:60], date_event)
+            inserted += 1
+
+    return inserted
+
+
 # ── Source 2 : NordicMag RSS ───────────────────────────────────────────────────
 def scrape_nordicmag_events() -> int:
     """Parse le RSS NordicMag et détecte les articles sur des compétitions à Prémanon."""
@@ -383,7 +487,10 @@ def main():
     log.info("=== scrape_events.py démarré ===")
 
     n1 = scrape_ffs_events()
-    log.info("FFS : %d événement(s) détecté(s) à Les Tuffes/Prémanon", n1)
+    log.info("FFS articles : %d événement(s) détecté(s) à Les Tuffes/Prémanon", n1)
+
+    n1b = scrape_ffs_calendrier_events()
+    log.info("FFS calendrier : %d événement(s) détecté(s) à Les Tuffes/Prémanon", n1b)
 
     n2 = scrape_nordicmag_events()
     log.info("NordicMag : %d événement(s) détecté(s)", n2)
@@ -391,7 +498,7 @@ def main():
     n3 = scrape_club_events()
     log.info("Clubs locaux : %d événement(s) détecté(s)", n3)
 
-    total = n1 + n2 + n3
+    total = n1 + n1b + n2 + n3
     log.info("=== Terminé : %d événement(s) ajouté(s) en 'pending' pour validation admin ===", total)
 
 
