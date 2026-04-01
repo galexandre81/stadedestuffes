@@ -265,7 +265,15 @@ def scrape_ffs_events() -> int:
 
 
 # ── Source 1b : FFS calendrier officiel (https://ffs.fr/calendrier/) ───────────
-CALENDRIER_URL = "https://ffs.fr/calendrier/"
+CALENDRIER_BASE_URL = "https://ffs.fr/calendrier/"
+
+# Mapping discipline ID → sport name (from URL params)
+FFS_DISCIPLINES = [
+    (1, "Ski de fond"),
+    (2, "Biathlon"),
+    (3, "Saut à ski"),
+    (4, "Combiné nordique"),
+]
 
 def fetch_ffs_calendrier_detail(url: str) -> dict:
     """Récupère le détail d'un événement FFS (titre/date/place/description)."""
@@ -301,69 +309,74 @@ def fetch_ffs_calendrier_detail(url: str) -> dict:
 def scrape_ffs_calendrier_events() -> int:
     """Scrape le calendrier FFS et ajoute les événements à Prémanon / Les Tuffes."""
     inserted = 0
-    try:
-        resp = requests.get(CALENDRIER_URL, timeout=TIMEOUT, headers=HEADERS)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.content, "html.parser")
-    except Exception as exc:
-        log.warning("   FFS calendrier inaccessible : %s", exc)
-        return 0
-
-    # Exemples de sélecteurs, robustes sur plusieurs versions de page
-    selectors = [
-        "article", ".agenda-item", ".fc-event", ".calendar-event", ".event-item",
-        ".item", "li",
-    ]
-
-    candidates = []
-    for sel in selectors:
-        candidates.extend(soup.select(sel))
-
-    seen_urls = set()
-    for node in candidates:
-        # lien vers détail potentiellement plus complet
-        link = node.find("a", href=True)
-        url = link["href"].strip() if link else CALENDRIER_URL
-
-        title = node.get_text(separator=" ", strip=True)
-        if not title:
+    for disc_id, sport in FFS_DISCIPLINES:
+        # URL filtrée par discipline et date depuis 01/01/2026
+        url = f"{CALENDRIER_BASE_URL}?discipline={disc_id}&date_du=01%2F01%2F2026&filters=1"
+        try:
+            resp = requests.get(url, timeout=TIMEOUT, headers=HEADERS)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.content, "html.parser")
+        except Exception as exc:
+            log.warning("   FFS calendrier discipline=%d inaccessible : %s", disc_id, exc)
             continue
 
-        # ne conserver que les événements contenant Prémanon/Les Tuffes
-        if not is_lieu_tuffes(title):
-            continue
+        # Exemples de sélecteurs, robustes sur plusieurs versions de page
+        selectors = [
+            "article", ".agenda-item", ".fc-event", ".calendar-event", ".event-item",
+            ".item", "li",
+        ]
 
-        # pour éviter doublons de même lien
-        if url in seen_urls:
-            continue
-        seen_urls.add(url)
+        candidates = []
+        for sel in selectors:
+            candidates.extend(soup.select(sel))
 
-        # extraire infos du détail si possible
-        detail = fetch_ffs_calendrier_detail(url) if url and url != CALENDRIER_URL else {}
-        full_text = " ".join([title, detail.get("full_text", "")])
-        date_event = detail.get("date") or extract_date_from_text(full_text)
+        seen_urls = set()
+        for node in candidates:
+            # lien vers détail potentiellement plus complet
+            link = node.find("a", href=True)
+            url_detail = link["href"].strip() if link else url
 
-        # on exige une date pour éviter le parsing de non-événements
-        if not date_event:
-            continue
+            title = node.get_text(separator=" ", strip=True)
+            if not title:
+                continue
 
-        sport = detect_sport(full_text)
+            # ne conserver que les événements contenant Prémanon/Les Tuffes
+            if not is_lieu_tuffes(title):
+                continue
 
-        event_title = detail.get("title") or title
+            # pour éviter doublons de même lien
+            if url_detail in seen_urls:
+                continue
+            seen_urls.add(url_detail)
 
-        row = make_event_row(
-            title=event_title,
-            date_str=date_event,
-            sport=sport,
-            source_name="FFS calendrier",
-            source_url=url,
-            notes=(detail.get("notes") or title)[:500],
-            status="published",
-        )
+            # extraire infos du détail si possible
+            detail = fetch_ffs_calendrier_detail(url_detail) if url_detail and url_detail != url else {}
+            full_text = " ".join([title, detail.get("full_text", "")])
+            date_event = detail.get("date") or extract_date_from_text(full_text)
 
-        if upsert_event(row):
-            log.info("   + FFS calendrier event : %s (%s)", event_title[:60], date_event)
-            inserted += 1
+            # on exige une date pour éviter le parsing de non-événements
+            if not date_event:
+                continue
+
+            sport_detected = detect_sport(full_text) or sport
+
+            event_title = detail.get("title") or title
+
+            row = make_event_row(
+                title=event_title,
+                date_str=date_event,
+                sport=sport_detected,
+                source_name="FFS calendrier",
+                source_url=url_detail,
+                notes=(detail.get("notes") or title)[:500],
+                status="published",
+            )
+
+            if upsert_event(row):
+                log.info("   + FFS calendrier %s event : %s (%s)", sport, event_title[:60], date_event)
+                inserted += 1
+
+        time.sleep(0.5)
 
     return inserted
 
