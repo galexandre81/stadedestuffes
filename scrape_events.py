@@ -320,23 +320,17 @@ def scrape_ffs_calendrier_events() -> int:
             log.warning("   FFS calendrier discipline=%d inaccessible : %s", disc_id, exc)
             continue
 
-        # Exemples de sélecteurs, robustes sur plusieurs versions de page
-        selectors = [
-            "article", ".agenda-item", ".fc-event", ".calendar-event", ".event-item",
-            ".item", "li",
-        ]
-
-        candidates = []
-        for sel in selectors:
-            candidates.extend(soup.select(sel))
+        # Structure trouvée : div.items-el avec titre dans h3.title-text
+        items = soup.select("div.items-el")
+        if not items:
+            log.debug("   FFS calendrier discipline=%d : 0 items trouvés", disc_id)
+            continue
 
         seen_urls = set()
-        for node in candidates:
-            # lien vers détail potentiellement plus complet
-            link = node.find("a", href=True)
-            url_detail = link["href"].strip() if link else url
-
-            title = node.get_text(separator=" ", strip=True)
+        for item in items:
+            # Titre de l'événement
+            title_h3 = item.find("h3", class_="title-text")
+            title = title_h3.get_text(separator=" ", strip=True) if title_h3 else ""
             if not title:
                 continue
 
@@ -344,36 +338,53 @@ def scrape_ffs_calendrier_events() -> int:
             if not is_lieu_tuffes(title):
                 continue
 
-            # pour éviter doublons de même lien
+            # Cherche lien éventuel pour détail
+            link = item.find("a", href=True)
+            url_detail = link["href"].strip() if link else url
+
+            # pour éviter doublons
             if url_detail in seen_urls:
                 continue
             seen_urls.add(url_detail)
 
-            # extraire infos du détail si possible
-            detail = fetch_ffs_calendrier_detail(url_detail) if url_detail and url_detail != url else {}
-            full_text = " ".join([title, detail.get("full_text", "")])
-            date_event = detail.get("date") or extract_date_from_text(full_text)
+            # Extraire date du texte visuel (DD-MM Jan. YYYY)
+            date_span = item.find("span", class_="date-day")
+            date_text = date_span.get_text(strip=True) if date_span else ""
+            
+            # Chercher aussi le mois/année dans les divs suivants
+            full_item_text = item.get_text(separator=" ", strip=True)
+            date_event = extract_date_from_text(full_item_text)
 
-            # on exige une date pour éviter le parsing de non-événements
+            # Si pas trouvé : essayer de parser la date visible (ex: "03-04 Jan. 2026")
+            if not date_event and date_text:
+                # le format DD-MM, on prend juste le jour
+                from_text = f"{date_text} {full_item_text[full_item_text.find(date_text)+len(date_text):]}"
+                date_event = extract_date_from_text(from_text)
+
             if not date_event:
+                # Essayer d'extraire depuis détail si lien présent
+                detail = fetch_ffs_calendrier_detail(url_detail) if url_detail and url_detail != url else {}
+                date_event = detail.get("date") or extract_date_from_text(detail.get("full_text", ""))
+
+            # on exige une date
+            if not date_event:
+                log.debug("   FFS could not extract date for: %s", title[:50])
                 continue
 
-            sport_detected = detect_sport(full_text) or sport
-
-            event_title = detail.get("title") or title
+            sport_detected = detect_sport(title) or sport
 
             row = make_event_row(
-                title=event_title,
+                title=title,
                 date_str=date_event,
                 sport=sport_detected,
                 source_name="FFS calendrier",
                 source_url=url_detail,
-                notes=(detail.get("notes") or title)[:500],
+                notes=title[:500],
                 status="published",
             )
 
             if upsert_event(row):
-                log.info("   + FFS calendrier %s event : %s (%s)", sport, event_title[:60], date_event)
+                log.info("   + FFS calendrier %s event : %s (%s)", sport_detected, title[:60], date_event)
                 inserted += 1
 
         time.sleep(0.5)
