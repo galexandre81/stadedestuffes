@@ -100,6 +100,9 @@
       text-transform: uppercase; letter-spacing: -1px; color: white;
     }
     .hero-title em { font-style: italic; color: var(--sky); }
+    .hero-jason { margin-top: 5px; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+    .hero-jason a { color: var(--muted); text-decoration: none; border-bottom: 1px solid rgba(107,157,184,.3); transition: color .15s, border-color .15s; }
+    .hero-jason a:hover { color: var(--frost); border-color: rgba(184,217,245,.5); }
     .hero-sub { margin-top: 10px; font-size: 13px; color: var(--frost); }
 
     /* ---- SECTION ---- */
@@ -118,6 +121,15 @@
       cursor: pointer; transition: all .15s;
     }
     .filter-btn:hover, .filter-btn.active { background: var(--sky); border-color: var(--sky); color: white; }
+    .filter-btn[data-filter="Ski de fond"]       { color: #4BA3D9; border-color: rgba(75,163,217,.45); }
+    .filter-btn[data-filter="Biathlon"]          { color: #F5A623; border-color: rgba(245,166,35,.45); }
+    .filter-btn[data-filter="Combiné nordique"]  { color: #2ECC71; border-color: rgba(46,204,113,.45); }
+    .filter-btn[data-filter="Saut à ski"]        { color: #9B59B6; border-color: rgba(155,89,182,.45); }
+    .filter-btn[data-filter="Para"]              { color: #E91E8C; border-color: rgba(233,30,140,.45); }
+    .filter-btn[data-filter="Biathlon"]:hover,         .filter-btn[data-filter="Biathlon"].active         { background: #F5A623; border-color: #F5A623; }
+    .filter-btn[data-filter="Combiné nordique"]:hover, .filter-btn[data-filter="Combiné nordique"].active { background: #2ECC71; border-color: #2ECC71; }
+    .filter-btn[data-filter="Saut à ski"]:hover,       .filter-btn[data-filter="Saut à ski"].active       { background: #9B59B6; border-color: #9B59B6; }
+    .filter-btn[data-filter="Para"]:hover,             .filter-btn[data-filter="Para"].active             { background: #E91E8C; border-color: #E91E8C; }
 
     /* ---- CARDS ---- */
     .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; }
@@ -143,6 +155,7 @@
     .card-sport.biathlon { color: #F5A623; }
     .card-sport.saut     { color: #9B59B6; }
     .card-sport.combine  { color: #2ECC71; }
+    .card-sport.para     { color: #E91E8C; }
     .card-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; color: white; line-height: 1.2; margin-bottom: 7px; }
     .card-badges { display: flex; gap: 5px; flex-wrap: wrap; }
     .badge {
@@ -247,6 +260,15 @@
     .source-lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
     .source-link { font-size: 12px; color: var(--sky); word-break: break-all; }
     .source-link a { color: var(--sky); text-decoration: none; }
+    .mod-req-btn {
+      margin-top: 14px; width: 100%; padding: 9px 16px;
+      background: transparent; border: 1px solid rgba(75,163,217,.35);
+      border-radius: 3px; color: var(--frost);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+      font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+      cursor: pointer; transition: all .15s; display: block;
+    }
+    .mod-req-btn:hover { background: rgba(75,163,217,.12); border-color: var(--sky); color: white; }
     .modal-disclaimer {
       margin-top: 13px; font-size: 11px; color: var(--muted);
       font-style: italic; line-height: 1.5; padding-top: 10px;
@@ -453,6 +475,7 @@
       <span class="tag">Saut à ski</span>
     </div>
     <h1 class="hero-title">Stade<br><em>Nordique</em><br>des Tuffes</h1>
+    <p class="hero-jason"><a href="https://en.wikipedia.org/wiki/Jason_Lamy-Chappuis" target="_blank" rel="noopener">Jason Lamy Chappuis</a></p>
     <p class="hero-sub">Calendrier des compétitions · Prémanon, Jura · Alt. 1020 m</p>
   </div>
 </div>
@@ -471,6 +494,7 @@
     <button class="filter-btn" data-filter="Biathlon">Biathlon</button>
     <button class="filter-btn" data-filter="Combiné nordique">Combiné nordique</button>
     <button class="filter-btn" data-filter="Saut à ski">Saut à ski</button>
+    <button class="filter-btn" data-filter="Para">Para</button>
   </div>
 
   <!-- À VENIR -->
@@ -501,6 +525,7 @@
       <span class="legend-item"><span class="legend-dot" style="background:#E74C3C"></span>Accès restreint</span>
       <span class="legend-item"><span class="legend-dot" style="background:#F5A623"></span>Restauration sur place</span>
       <span class="legend-item"><span class="legend-dot" style="background:#95A5A6"></span>Sans restauration</span>
+      <span class="legend-item"><span style="display:inline-block;width:12px;height:12px;background:#E8302A;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>Date imminente (&lt; 14 jours)</span>
     </div>
   </div>
 </div>
@@ -555,6 +580,37 @@
       <div class="modal-disclaimer">
         Ces informations sont collectées automatiquement ou signalées par la communauté. Vérifiez toujours auprès de la source officielle avant de vous déplacer.
       </div>
+      <button class="mod-req-btn" onclick="openModRequest()">✎ Demander une modification</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODIFICATION REQUEST MODAL -->
+<div class="overlay" id="mod-overlay">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Signalement</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;text-transform:uppercase;color:white;line-height:1.1;">Demande de modification</div>
+      </div>
+      <button class="modal-close" onclick="closeModRequest()">✕</button>
+    </div>
+    <div class="modal-body" id="mod-fields">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Votre adresse e-mail <span class="req">*</span></label>
+        <input class="form-input" type="email" id="mod-email" placeholder="votre@email.fr">
+        <span class="form-hint">Pour que nous puissions vous recontacter.</span>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Quelle modification souhaitez-vous apporter à cet événement ? <span class="req">*</span></label>
+        <textarea class="form-input" id="mod-message" rows="5" placeholder="Décrivez la modification souhaitée…" style="resize:vertical;"></textarea>
+      </div>
+      <button class="form-submit" onclick="submitModRequest()">Envoyer la demande</button>
+    </div>
+    <div id="mod-success" style="display:none;padding:28px 22px;text-align:center;">
+      <div style="font-size:28px;margin-bottom:10px;">✓</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:white;margin-bottom:6px;">Demande envoyée !</div>
+      <div style="font-size:13px;color:var(--muted);">Merci pour votre contribution. Nous examinerons votre demande rapidement.</div>
     </div>
   </div>
 </div>
@@ -596,6 +652,7 @@
           <option>Biathlon</option>
           <option>Combiné nordique</option>
           <option>Saut à ski</option>
+          <option>Para</option>
           <option>Autre / Plusieurs</option>
         </select>
       </div>
@@ -700,11 +757,13 @@ const SPORT_CLASS = {
   'saut': 'saut',
   'combiné nordique': 'combine',
   'combine': 'combine',
+  'para': 'para',
 };
 const SPORT_COLOR = {
   'biathlon': '#F5A623',
   'saut': '#9B59B6',
   'combine': '#2ECC71',
+  'para': '#E91E8C',
   '': '#4BA3D9',
 };
 
@@ -870,8 +929,11 @@ function applyFilter(filter) {
 // ================================================================
 // DETAIL MODAL
 // ================================================================
+let currentDetailEvent = null;
+
 function openDetail(id) {
   const ev = allEvents.find(e => e.id === id);
+  currentDetailEvent = ev || null;
   if (!ev) return;
 
   const sc = sportClass(ev.sport);
@@ -918,6 +980,50 @@ function closeDetail() {
 document.getElementById('detail-overlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeDetail();
 });
+
+// ================================================================
+// MODIFICATION REQUEST MODAL
+// ================================================================
+function openModRequest() {
+  document.getElementById('mod-fields').style.display = 'block';
+  document.getElementById('mod-success').style.display = 'none';
+  document.getElementById('mod-email').value = '';
+  document.getElementById('mod-message').value = '';
+  document.getElementById('mod-overlay').classList.add('open');
+}
+function closeModRequest() {
+  document.getElementById('mod-overlay').classList.remove('open');
+}
+document.getElementById('mod-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModRequest();
+});
+
+async function submitModRequest() {
+  const email = document.getElementById('mod-email').value.trim();
+  const message = document.getElementById('mod-message').value.trim();
+  if (!email || !message) {
+    alert('Merci de renseigner votre email et votre message.');
+    return;
+  }
+  const eventTitle = currentDetailEvent ? currentDetailEvent.title : '(inconnu)';
+  const eventId = currentDetailEvent ? currentDetailEvent.id : '—';
+  try {
+    await fetch('https://formsubmit.co/ajax/cinqcibles@gmail.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: `✏️ Demande de modification — ${eventTitle}`,
+        _template: 'table',
+        'Événement': eventTitle,
+        'ID événement': eventId,
+        'Email contact': email,
+        'Modification souhaitée': message,
+      }),
+    });
+  } catch(e) { /* silencieux */ }
+  document.getElementById('mod-fields').style.display = 'none';
+  document.getElementById('mod-success').style.display = 'block';
+}
 
 // ================================================================
 // FORM MODAL
