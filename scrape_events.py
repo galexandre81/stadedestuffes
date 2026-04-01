@@ -228,10 +228,13 @@ def scrape_ffs_events() -> int:
             date_pub = post.get("date", "")[:10]  # YYYY-MM-DD
 
             full_text = f"{title} {excerpt}"
-            if not is_lieu_tuffes(full_text):
+            # Le TITRE doit mentionner Tuffes/Prémanon ET être une annonce, pas un résultat
+            if not is_lieu_tuffes(title):
                 continue
-            if is_resultat(full_text):
-                continue  # article de résultats, pas une annonce d'événement
+            if is_resultat(title):
+                continue
+            if not is_competition(title):
+                continue
 
             # Chercher une date dans le texte, sinon utiliser la date de publication + 7j
             date_event = extract_date_from_text(full_text)
@@ -279,12 +282,13 @@ def scrape_nordicmag_events() -> int:
         link = getattr(entry, "link", "")
 
         full_text = f"{title} {summary}"
-        if not is_lieu_tuffes(full_text):
+        # Le TITRE doit mentionner Tuffes/Prémanon ET être une annonce compétition
+        if not is_lieu_tuffes(title):
             continue
-        if not is_competition(full_text):
+        if is_resultat(title):
             continue
-        if is_resultat(full_text):
-            continue  # article de résultats, pas une annonce
+        if not is_competition(title):
+            continue
 
         ts = getattr(entry, "published_parsed", None)
         pub_date = None
