@@ -6,8 +6,8 @@ Stratégie : détecter les compétitions à Prémanon/Les Tuffes via :
   2. Articles NordicMag (RSS) mentionnant prémanon/tuffes
   3. Articles des clubs locaux (CSR Pontarlier, Saugeathlon) pour compétitions régionales
 
-Les événements créés sont en status='pending' et nécessitent validation admin,
-sauf si la source est considérée suffisamment fiable (FFS officiel).
+Les événements mentionnant Prémanon/Tuffes sont publiés directement (status='published').
+La validation (status='pending') est réservée aux soumissions manuelles du formulaire public.
 """
 
 import os
@@ -233,7 +233,7 @@ def scrape_ffs_events() -> int:
                 source_name="FFS",
                 source_url=link,
                 notes=excerpt[:300] if excerpt else "",
-                status="pending",
+                status="published",  # FFS + lieu confirmé → publié directement
             )
             if upsert_event(row):
                 log.info("   + FFS event : %s (%s)", title[:60], date_event)
@@ -284,7 +284,7 @@ def scrape_nordicmag_events() -> int:
             source_name="NordicMag",
             source_url=link,
             notes=summary[:300] if summary else "",
-            status="pending",
+            status="published",  # lieu Tuffes/Prémanon confirmé → publié directement
         )
         if upsert_event(row):
             log.info("   + NordicMag event : %s (%s)", title[:60], date_event)
@@ -322,6 +322,11 @@ def scrape_club_events() -> int:
             if not is_competition(full_text):
                 continue
 
+            # Si le lieu est confirmé → publié, sinon on ignore
+            lieu_confirme = is_lieu_tuffes(full_text)
+            if not lieu_confirme:
+                continue
+
             ts = getattr(entry, "published_parsed", None)
             pub_date = None
             if ts:
@@ -339,7 +344,7 @@ def scrape_club_events() -> int:
                 source_name=source_name,
                 source_url=link,
                 notes=summary[:300] if summary else "",
-                status="pending",
+                status="published",  # lieu Tuffes/Prémanon confirmé → publié directement
             )
             if upsert_event(row):
                 log.info("   + %s event : %s (%s)", source_name, title[:60], date_event)
