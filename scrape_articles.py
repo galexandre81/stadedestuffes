@@ -173,15 +173,14 @@ def scrape_source(source: dict) -> tuple[int, int, int]:
         mentions_tuffes  = detect_mentions_tuffes(full_text)
         regional         = detect_regional(full_text)
 
-        # Filtrage : on garde l'article si…
-        # - médias nationaux / FFS / clubs : toujours publiés
-        # - sinon : seulement si Tuffes / régional / sport nordique trouvé
-        if source["category"] in ("media", "ffs", "club"):
+        # Filtrage : on garde l'article uniquement s'il mentionne Tuffes/Prémanon
+        # ou s'il vient d'un club local (toujours pertinent régionalement)
+        if mentions_tuffes:
             status = "published"
-        elif mentions_tuffes or regional or sport_tags:
+        elif source["category"] == "club":
             status = "published"
         else:
-            continue  # article hors-scope, on ignore
+            continue  # article ne parle pas des Tuffes/Prémanon → ignoré
 
         row = {
             "title":           title,

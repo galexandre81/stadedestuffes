@@ -95,6 +95,21 @@ def is_competition(text: str) -> bool:
     return any(kw in lower for kw in KEYWORDS_COMPET)
 
 
+# Mots-clés qui indiquent un article de résultats (passé) → à exclure des events
+KEYWORDS_RESULTATS = [
+    "victoire", "vainqueur", "vainqueure", "gagne", "remporte", "podium",
+    "résultat", "résultats", "classement", "bilan", "palmarès", "palmares",
+    "médaille", "medaille", "titre", "sacre", "sacré", "champion",
+    "l'émotion", "dernière course", "tire sa révérence", "raccroche",
+    "interview", "réaction", "après sa", "après la", "après le",
+]
+
+def is_resultat(text: str) -> bool:
+    """Retourne True si le texte ressemble à un article de résultats (pas une annonce)."""
+    lower = text.lower()
+    return any(kw in lower for kw in KEYWORDS_RESULTATS)
+
+
 def extract_date_from_text(text: str) -> str | None:
     """
     Cherche une date dans le texte.
@@ -215,6 +230,8 @@ def scrape_ffs_events() -> int:
             full_text = f"{title} {excerpt}"
             if not is_lieu_tuffes(full_text):
                 continue
+            if is_resultat(full_text):
+                continue  # article de résultats, pas une annonce d'événement
 
             # Chercher une date dans le texte, sinon utiliser la date de publication + 7j
             date_event = extract_date_from_text(full_text)
@@ -266,6 +283,8 @@ def scrape_nordicmag_events() -> int:
             continue
         if not is_competition(full_text):
             continue
+        if is_resultat(full_text):
+            continue  # article de résultats, pas une annonce
 
         ts = getattr(entry, "published_parsed", None)
         pub_date = None
