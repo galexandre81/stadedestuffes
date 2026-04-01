@@ -28,21 +28,26 @@ SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 sb: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ── Sources RSS ────────────────────────────────────────────────────────────────
+# Notes sur les URLs :
+# - FFS : les anciens /rss/actualites/xxx sont morts → feeds WP par catégorie
+#   cat=56 fond, cat=9 biathlon, cat=52 saut, cat=55 combiné
+# - ski-nordique.net : /feed inexistant → /rss.php/cat/72348
+# - biathlonmag.fr : site inaccessible (connexion refusée) → retiré
+# - saugeathlon.fr + hautjuraleman.com : sites Wix → /blog-feed.xml
 SOURCES = [
     # Médias nationaux nordiques
-    {"name": "NordicMag",          "url": "https://www.nordicmag.info/feed/",               "category": "media"},
-    {"name": "Ski-Nordique.net",   "url": "https://www.ski-nordique.net/feed",               "category": "media"},
-    {"name": "Biathlon Magazine",  "url": "https://www.biathlonmag.fr/feed",                "category": "media"},
-    # FFS
-    {"name": "FFS Fond",           "url": "https://www.ffs.fr/rss/actualites/fond",          "category": "ffs"},
-    {"name": "FFS Biathlon",       "url": "https://www.ffs.fr/rss/actualites/biathlon",      "category": "ffs"},
-    {"name": "FFS Saut",           "url": "https://www.ffs.fr/rss/actualites/saut",          "category": "ffs"},
-    {"name": "FFS Combiné",        "url": "https://www.ffs.fr/rss/actualites/combine-nordique", "category": "ffs"},
-    # Clubs locaux (WordPress RSS)
-    {"name": "SC Grandvaux",       "url": "https://scgrandvaux.fr/feed/",                    "category": "club"},
-    {"name": "CSR Pontarlier",     "url": "https://csrpontarlier.fr/feed/",                  "category": "club"},
-    {"name": "Saugeathlon",        "url": "https://saugeathlon.fr/feed/",                    "category": "club"},
-    {"name": "Haut-Jura Léman",    "url": "https://hautjuraleman.com/feed/",                 "category": "club"},
+    {"name": "NordicMag",          "url": "https://www.nordicmag.info/feed/",                    "category": "media"},
+    {"name": "Ski-Nordique.net",   "url": "https://www.ski-nordique.net/rss.php/cat/72348",      "category": "media"},
+    # FFS — feeds WordPress par discipline
+    {"name": "FFS Fond",           "url": "https://ffs.fr/?feed=rss2&cat=56",                    "category": "ffs"},
+    {"name": "FFS Biathlon",       "url": "https://ffs.fr/?feed=rss2&cat=9",                     "category": "ffs"},
+    {"name": "FFS Saut",           "url": "https://ffs.fr/?feed=rss2&cat=52",                    "category": "ffs"},
+    {"name": "FFS Combiné",        "url": "https://ffs.fr/?feed=rss2&cat=55",                    "category": "ffs"},
+    # Clubs locaux
+    {"name": "SC Grandvaux",       "url": "https://scgrandvaux.fr/feed/",                        "category": "club"},
+    {"name": "CSR Pontarlier",     "url": "https://csrpontarlier.fr/feed/",                      "category": "club"},
+    {"name": "Saugeathlon",        "url": "https://www.saugeathlon.fr/blog-feed.xml",            "category": "club"},
+    {"name": "Haut-Jura Léman",    "url": "https://hautjuraleman.com/blog-feed.xml",             "category": "club"},
 ]
 
 # ── Mots-clés ──────────────────────────────────────────────────────────────────
@@ -136,8 +141,7 @@ def scrape_source(source: dict) -> tuple[int, int, int]:
     name = source["name"]
 
     try:
-        # feedparser avec timeout via requests
-        resp = requests.get(source["url"], timeout=10, headers={"User-Agent": "stadedestuffes-bot/1.0"})
+        resp = requests.get(source["url"], timeout=12, headers={"User-Agent": "stadedestuffes-bot/1.0"})
         resp.raise_for_status()
         feed = feedparser.parse(resp.content)
     except Exception as exc:
@@ -170,8 +174,7 @@ def scrape_source(source: dict) -> tuple[int, int, int]:
         regional         = detect_regional(full_text)
 
         # Filtrage : on garde l'article si…
-        # - médias nationaux / FFS : toujours publiés
-        # - clubs locaux : toujours publiés
+        # - médias nationaux / FFS / clubs : toujours publiés
         # - sinon : seulement si Tuffes / régional / sport nordique trouvé
         if source["category"] in ("media", "ffs", "club"):
             status = "published"
@@ -195,61 +198,17 @@ def scrape_source(source: dict) -> tuple[int, int, int]:
 
         try:
             result = sb.table("press_articles").upsert(row, on_conflict="url").execute()
-            # Supabase upsert : si la ligne était déjà là, elle est mise à jour
-            # On ne peut pas distinguer insert vs update facilement, on compte juste
-            added += 1
+            if hasattr(result, 'data') and result.data is not None:
+                added += 1
+            else:
+                log.warning("   ✗ upsert sans données pour '%s'", url[:60])
+                errors += 1
         except Exception as exc:
-            log.warning("   ✗ upsert échoué pour '%s' : %s", url[:60], exc)
+            log.error("   ✗ upsert ÉCHOUÉ pour '%s' : %s", url[:60], exc)
+            log.error("      → Vérifiez que SUPABASE_KEY est la service_role key ou que les policies RLS INSERT/UPDATE sont actives sur press_articles")
             errors += 1
 
     return added, already, errors
-
-
-# ── Scrape FFS fallback (si RSS FFS renvoie 0 entrées) ────────────────────────
-FFS_SECTIONS = {
-    "FFS Fond":    ("https://www.ffs.fr/actualites?discipline=fond",    "fond"),
-    "FFS Biathlon":("https://www.ffs.fr/actualites?discipline=biathlon","biathlon"),
-}
-
-def scrape_ffs_html(section_name: str, url: str, sport: str) -> int:
-    """Fallback scraping HTML FFS si RSS non disponible."""
-    inserted = 0
-    try:
-        resp = requests.get(url, timeout=10, headers={"User-Agent": "stadedestuffes-bot/1.0"})
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-
-        # Les articles FFS sont dans des <article> ou <div class="news-item">
-        items = soup.select("article") or soup.select(".news-item") or soup.select(".article-item")
-        for item in items[:20]:
-            a_tag = item.find("a", href=True)
-            if not a_tag:
-                continue
-            href = a_tag["href"]
-            if not href.startswith("http"):
-                href = "https://www.ffs.fr" + href
-            title_tag = item.find(["h2", "h3", "h4"])
-            title = title_tag.get_text(strip=True) if title_tag else a_tag.get_text(strip=True)
-            if not title:
-                continue
-
-            row = {
-                "title":           title,
-                "url":             href,
-                "source_name":     section_name,
-                "source_url":      url,
-                "sport_tags":      [sport],
-                "mentions_tuffes": detect_mentions_tuffes(title),
-                "status":          "published",
-            }
-            try:
-                sb.table("press_articles").upsert(row, on_conflict="url").execute()
-                inserted += 1
-            except Exception:
-                pass
-    except Exception as exc:
-        log.warning("FFS HTML fallback échoué (%s) : %s", section_name, exc)
-    return inserted
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
