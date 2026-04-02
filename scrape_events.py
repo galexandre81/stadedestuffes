@@ -333,10 +333,12 @@ CALENDRIER_BASE_URL = "https://ffs.fr/calendrier/"
 
 # IDs réels du calendrier FFS (vérifiés sur le site)
 FFS_DISCIPLINES = [
-    (4, "Ski de fond"),
-    (2, "Biathlon"),
-    (7, "Saut à ski"),
-    (3, "Combiné nordique"),
+    (4,  "Ski de fond"),
+    (2,  "Biathlon"),
+    (7,  "Saut à ski"),
+    (3,  "Combiné nordique"),
+    (13, "Ski de fond"),   # Roller ski / Ski roues (à vérifier)
+    (15, "Para"),          # Para nordique (à vérifier)
 ]
 
 def fetch_ffs_calendrier_detail(url: str) -> dict:
@@ -424,7 +426,10 @@ def scrape_ffs_calendrier_events() -> int:
                 log.debug("   FFS could not extract date for: %s", title[:50])
                 continue
 
-            sport_detected = detect_sport(title) or sport
+            # Préférer le sport de la discipline FFS ; detect_sport seulement si plus précis
+            sport_detected = detect_sport(title)
+            if sport_detected == "Nordique":
+                sport_detected = sport  # utiliser le sport connu de la discipline
 
             row = make_event_row(
                 title=title,
