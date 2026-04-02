@@ -267,12 +267,12 @@ def scrape_ffs_events() -> int:
 # ── Source 1b : FFS calendrier officiel (https://ffs.fr/calendrier/) ───────────
 CALENDRIER_BASE_URL = "https://ffs.fr/calendrier/"
 
-# Mapping discipline ID → sport name (from URL params)
+# IDs réels du calendrier FFS (vérifiés sur le site)
 FFS_DISCIPLINES = [
-    (1, "Ski de fond"),
+    (4, "Ski de fond"),
     (2, "Biathlon"),
-    (3, "Saut à ski"),
-    (4, "Combiné nordique"),
+    (7, "Saut à ski"),
+    (3, "Combiné nordique"),
 ]
 
 def fetch_ffs_calendrier_detail(url: str) -> dict:
@@ -334,8 +334,11 @@ def scrape_ffs_calendrier_events() -> int:
             if not title:
                 continue
 
+            # Texte complet de l'item pour détecter le lieu (souvent hors du titre)
+            full_item_text = item.get_text(separator=" ", strip=True)
+
             # ne conserver que les événements contenant Prémanon/Les Tuffes
-            if not is_lieu_tuffes(title):
+            if not is_lieu_tuffes(title) and not is_lieu_tuffes(full_item_text):
                 continue
 
             # Cherche lien éventuel pour détail
@@ -350,9 +353,6 @@ def scrape_ffs_calendrier_events() -> int:
             # Extraire date du texte visuel (DD-MM Jan. YYYY)
             date_span = item.find("span", class_="date-day")
             date_text = date_span.get_text(strip=True) if date_span else ""
-            
-            # Chercher aussi le mois/année dans les divs suivants
-            full_item_text = item.get_text(separator=" ", strip=True)
             date_event = extract_date_from_text(full_item_text)
 
             # Si pas trouvé : essayer de parser la date visible (ex: "03-04 Jan. 2026")
