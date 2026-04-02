@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mentions légales – Stade Nordique des Tuffes</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bleu:    #0a1f3c;
+      --bleu-mid:#123568;
+      --cyan:    #00b4d8;
+      --blanc:   #f5f7fa;
+      --gris:    #8a9ab5;
+      --neige:   #dde8f5;
+      --or:      #f5a623;
+      --rouge:   #E8302A;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      font-weight: 300;
+      background: var(--bleu);
+      color: var(--blanc);
+      overflow-x: hidden;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      min-height: 42vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0 0 3.5rem;
+      overflow: hidden;
+      background: linear-gradient(160deg, #0d2a50 0%, #0a1f3c 60%, #061428 100%);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 80% 30%, rgba(0,180,216,.14) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 10% 80%, rgba(18,53,104,.6) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      border: 1px solid rgba(0,180,216,.4);
+      padding: .3rem .9rem;
+      border-radius: 2px;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(3rem, 9vw, 6rem);
+      font-weight: 800;
+      line-height: .95;
+      letter-spacing: -.01em;
+      text-transform: uppercase;
+      color: var(--blanc);
+      position: relative;
+    }
+    .hero h1 span { color: var(--cyan); }
+    .hero-sub {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: var(--neige);
+      max-width: 52ch;
+      opacity: .8;
+      line-height: 1.55;
+    }
+    .hero-mountains {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 55%;
+      height: 55%;
+      pointer-events: none;
+      opacity: .07;
+    }
+
+    /* ─── NAV ─── */
+    .nav {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 2rem; border-bottom: 1px solid rgba(255,255,255,.1);
+      flex-wrap: wrap; gap: 10px;
+    }
+    .logo {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+      font-size: 19px; letter-spacing: 2px; text-transform: uppercase;
+      color: white; line-height: 1; text-decoration: none;
+    }
+    .logo span { display: block; font-size: 9px; font-weight: 400; letter-spacing: 3px; color: rgba(221,232,245,.7); margin-top: 2px; }
+    .nav-links { display: flex; align-items: center; gap: 2px; }
+    .nav-link {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 11px;
+      color: rgba(221,232,245,.75); text-decoration: none; border-radius: 2px;
+      transition: background .15s, color .15s;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: white; }
+    .nav-link.active { color: white; background: rgba(0,180,216,.18); }
+    .btn-announce {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 15px;
+      background: transparent; border: 1px solid rgba(221,232,245,.4); color: rgba(221,232,245,.85);
+      border-radius: 2px; cursor: pointer; text-decoration: none; transition: all .15s;
+    }
+    .btn-announce:hover { background: white; color: var(--bleu); border-color: white; }
+    @media (max-width: 720px) { .nav-links { display: none; } }
+
+    /* ─── LAYOUT ─── */
+    .page-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+
+    /* ─── NOTICE BANNER ─── */
+    .notice-banner {
+      margin-top: 2.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: .8rem;
+      background: rgba(245,166,35,.07);
+      border: 1px solid rgba(245,166,35,.25);
+      border-left: 4px solid var(--or);
+      border-radius: 8px;
+      padding: 1rem 1.4rem;
+      font-size: .9rem;
+      color: #f5d78e;
+      line-height: 1.6;
+    }
+    .notice-banner svg {
+      flex-shrink: 0;
+      width: 1.2rem;
+      height: 1.2rem;
+      fill: var(--or);
+      margin-top: .1rem;
+    }
+    .notice-banner strong { color: #fdeea6; font-weight: 500; }
+
+    /* ─── SECTION TITLES ─── */
+    .section {
+      margin-top: 3.5rem;
+    }
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      margin-bottom: 1.4rem;
+    }
+    .section-label .icon {
+      width: 2.2rem;
+      height: 2.2rem;
+      background: var(--cyan);
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .section-label .icon svg {
+      width: 1.1rem;
+      height: 1.1rem;
+      fill: var(--bleu);
+    }
+    .section-label h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--blanc);
+    }
+
+    /* ─── INFO CARD ─── */
+    .info-card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 1.4rem 1.6rem;
+      margin-top: .5rem;
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--neige);
+    }
+    .info-card p { margin: 0; }
+    .info-card p + p { margin-top: .5rem; }
+    .info-card strong { color: var(--blanc); font-weight: 500; }
+    .info-card a { color: var(--cyan); text-decoration: none; }
+    .info-card a:hover { text-decoration: underline; }
+
+    /* ─── BODY TEXT ─── */
+    .section > p {
+      font-size: .97rem;
+      line-height: 1.75;
+      color: var(--neige);
+      margin-bottom: .85rem;
+    }
+    .section > p:last-child { margin-bottom: 0; }
+    .section a { color: var(--cyan); text-decoration: none; }
+    .section a:hover { text-decoration: underline; }
+
+    /* ─── DIVIDER ─── */
+    hr.divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,.07);
+      margin: 3.5rem 0 0;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      text-align: center;
+      font-size: .8rem;
+      color: var(--gris);
+      padding: 2rem 1rem 3rem;
+      border-top: 1px solid rgba(255,255,255,.07);
+      margin-top: 4rem;
+    }
+    footer a {
+      color: var(--gris);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    footer a:hover { color: var(--blanc); }
+
+    /* ─── SNOW DECORATION ─── */
+    .snow-dots {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .snow-dots span {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      animation: snowfall linear infinite;
+    }
+    @keyframes snowfall {
+      0%   { transform: translateY(-20px) translateX(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: .5; }
+      100% { transform: translateY(110vh) translateX(30px); opacity: 0; }
+    }
+  </style>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-00973E87ZQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-00973E87ZQ');
+  </script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+<body>
+
+<!-- subtle snow effect -->
+<div class="snow-dots" aria-hidden="true">
+  <span style="left:8%;width:3px;height:3px;animation-duration:14s;animation-delay:0s;"></span>
+  <span style="left:22%;width:2px;height:2px;animation-duration:18s;animation-delay:3s;"></span>
+  <span style="left:41%;width:4px;height:4px;animation-duration:11s;animation-delay:7s;"></span>
+  <span style="left:63%;width:2px;height:2px;animation-duration:16s;animation-delay:1s;"></span>
+  <span style="left:79%;width:3px;height:3px;animation-duration:13s;animation-delay:9s;"></span>
+  <span style="left:90%;width:2px;height:2px;animation-duration:20s;animation-delay:5s;"></span>
+</div>
+
+<!-- ─── HERO ─── -->
+<header class="hero">
+  <nav class="nav">
+    <a href="index.html" class="logo">Les Tuffes <span>Stade Nordique · Prémanon · Site non officiel</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Calendrier</a>
+      <a href="articles.html" class="nav-link">Actualités</a>
+      <a href="venir-aux-tuffes.html" class="nav-link">Venir aux Tuffes</a>
+    </div>
+    <a href="index.html" class="btn-announce">+ Soumettre un événement</a>
+  </nav>
+  <svg class="hero-mountains" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMax meet" aria-hidden="true">
+    <polygon points="0,300 120,80 240,200 340,40 480,220 600,100 700,180 800,60 800,300" fill="white"/>
+  </svg>
+  <div style="padding:0 2rem;">
+    <div class="hero-badge">stadedestuffes.fr</div>
+    <h1>Mentions<br><span>légales</span></h1>
+    <p class="hero-sub">Informations légales relatives au site stadedestuffes.fr — initiative personnelle et indépendante.</p>
+  </div>
+</header>
+
+<!-- ─── CONTENT ─── -->
+<main class="page-content">
+
+  <!-- Notice -->
+  <div class="notice-banner" role="note">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+    <span>
+      Ce site est une <strong>initiative personnelle et indépendante</strong>, sans lien avec le CNSNMM, l'ENSM ou toute structure officielle. Les informations publiées sont collectées automatiquement ou signalées par la communauté — vérifiez toujours auprès de la source officielle avant de vous déplacer.
+    </span>
+  </div>
+
+  <!-- Responsable -->
+  <section class="section" id="responsable">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      </div>
+      <h2>Responsable de la publication</h2>
+    </div>
+    <div class="info-card">
+      <p><strong>Guillaume Alexandre</strong></p>
+      <p>Contact : <a href="mailto:cinqcibles@gmail.com">cinqcibles@gmail.com</a></p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Hébergeur -->
+  <section class="section" id="hebergement">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 6h-2.18c.07-.44.18-.86.18-1.3C18 2.1 15.9 0 13.3 0c-1.5 0-2.77.69-3.6 1.77L12 4.5l2.3-2.73C14.8 1.3 15.5 1 16.3 1c1.5 0 2.7 1.2 2.7 2.7 0 .73-.32 1.4-.8 1.9L15 9H4v2h16v9H4v2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM5 15h7v-2H5v2z"/></svg>
+      </div>
+      <h2>Hébergement</h2>
+    </div>
+    <p>Le site est hébergé sur <strong>GitHub Pages</strong>, service de Microsoft Corporation :</p>
+    <div class="info-card">
+      <p><strong>Microsoft Corporation</strong></p>
+      <p>88 Colin P. Kelly Jr. Street</p>
+      <p>San Francisco, CA 94107 — États-Unis</p>
+      <p><a href="https://pages.github.com" target="_blank" rel="noopener">pages.github.com</a></p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Domaine -->
+  <section class="section" id="domaine">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      </div>
+      <h2>Nom de domaine</h2>
+    </div>
+    <p>Le nom de domaine <strong>stadedestuffes.fr</strong> est enregistré auprès d'OVH SAS :</p>
+    <div class="info-card">
+      <p><strong>OVH SAS</strong></p>
+      <p>2 rue Kellermann — 59100 Roubaix, France</p>
+      <p><a href="https://www.ovh.com" target="_blank" rel="noopener">ovh.com</a></p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- RGPD -->
+  <section class="section" id="donnees">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4c1.4 0 2.8 1.1 2.8 2.5S13.4 10 12 10s-2.8-1.1-2.8-2.5S10.6 5 12 5zm0 8.5c-1.86 0-3.49-.9-4.5-2.28C7.53 9.92 9.3 9 12 9s4.47.92 4.5 2.22c-1.01 1.38-2.64 2.28-4.5 2.28z"/></svg>
+      </div>
+      <h2>Données personnelles &amp; RGPD</h2>
+    </div>
+    <p>Les formulaires présents sur ce site (signalement d'événement, demande de modification) peuvent collecter une <strong>adresse email</strong>. Ces données sont utilisées uniquement pour traiter la demande concernée.</p>
+    <p>Elles ne sont ni revendues, ni transmises à des tiers, et sont conservées le temps nécessaire au traitement de la demande.</p>
+    <p>Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour exercer ce droit : <a href="mailto:cinqcibles@gmail.com">cinqcibles@gmail.com</a></p>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Propriété intellectuelle -->
+  <section class="section" id="propriete">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.5 2C6.81 2 3 5.81 3 10.5S6.81 19 11.5 19h.5v3c4.86-2.34 8-7 8-11.5C20 5.81 16.19 2 11.5 2zm1 14.5h-2v-2h2v2zm0-4h-2c0-3.25 3-3 3-5 0-1.1-.9-2-2-2s-2 .9-2 2h-2c0-2.21 1.79-4 4-4s4 1.79 4 4c0 2.5-3 2.75-3 5z"/></svg>
+      </div>
+      <h2>Propriété intellectuelle</h2>
+    </div>
+    <p>Le contenu éditorial de ce site (textes, mise en page, code) est produit par Guillaume Alexandre. Les informations relatives aux compétitions sont issues de sources publiques et officielles, citées dans chaque entrée du calendrier.</p>
+    <p>Les marques et logos des fédérations, clubs ou institutions mentionnés sur ce site appartiennent à leurs propriétaires respectifs.</p>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Contact -->
+  <section class="section" id="contact">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      </div>
+      <h2>Contact</h2>
+    </div>
+    <p>Pour toute question, erreur constatée ou demande relative à ce site :</p>
+    <div class="info-card">
+      <p><a href="mailto:cinqcibles@gmail.com">cinqcibles@gmail.com</a></p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <a href="index.html">← Retour au calendrier</a>
+  &nbsp;·&nbsp;
+  stadedestuffes.fr — site non officiel
+</footer>
+
+</body>
+</html>
