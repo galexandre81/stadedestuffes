@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stade Nordique des Tuffes — Calendrier des compétitions</title>
   <meta name="description" content="Calendrier non officiel des compétitions et événements au Stade Nordique des Tuffes, Prémanon. Ski de fond, biathlon, combiné nordique, saut à ski.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://arkbrvzacbereyukqfte.supabase.co https://formsubmit.co https://www.google-analytics.com https://analytics.google.com; frame-src 'none'; object-src 'none'; base-uri 'self';">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
@@ -615,7 +617,7 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-00973E87ZQ');
+    gtag('config', 'G-00973E87ZQ', { 'anonymize_ip': true });
   </script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
@@ -797,6 +799,8 @@
       <button class="modal-close" onclick="closeModRequest()">✕</button>
     </div>
     <div class="modal-body" id="mod-fields">
+      <!-- honeypot anti-spam -->
+      <input type="text" id="mod-hp" name="website" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
       <div class="form-group" style="margin-bottom:14px;">
         <label class="form-label">Votre adresse e-mail <span class="req">*</span></label>
         <input class="form-input" type="email" id="mod-email" placeholder="votre@email.fr">
@@ -831,6 +835,8 @@
     </div>
 
     <div class="form-body" id="form-fields">
+      <!-- honeypot anti-spam -->
+      <input type="text" id="form-hp" name="website" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
       <div class="form-group">
         <label class="form-label">Nom de l'événement <span class="req">*</span></label>
         <input class="form-input" type="text" id="f-name" placeholder="ex. Coupe de France FFS — Sprint">
@@ -970,6 +976,23 @@ const SPORT_COLOR = {
   '': '#E8430A',
 };
 
+// ================================================================
+// SECURITY HELPERS
+// ================================================================
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function safeUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? url : null;
+  } catch { return null; }
+}
+
 function sportClass(sport) {
   if (!sport) return '';
   const k = sport.toLowerCase();
@@ -1017,8 +1040,8 @@ function buildCard(ev) {
         <span class="strip-month">${month}</span>
       </div>
       <div class="strip-body">
-        <span class="strip-discipline-badge ${badgeClass}">${ev.sport || 'Nordique'}</span>
-        <div class="strip-title">${ev.title}</div>
+        <span class="strip-discipline-badge ${badgeClass}">${escHtml(ev.sport || 'Nordique')}</span>
+        <div class="strip-title">${escHtml(ev.title)}</div>
         <div class="strip-badges">${pubBadge}${restoBadge}${urgencyBadge}</div>
       </div>
     </div>`;
@@ -1084,14 +1107,15 @@ async function loadLatestArticles() {
     grid.innerHTML = data.map(a => {
       const d = a.published_at ? new Date(a.published_at) : null;
       const dateStr = d ? `${d.getDate()} ${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}` : '';
+      const href = escHtml(safeUrl(a.url) || '#');
       return `
-        <a class="news-card${a.mentions_tuffes?' tuffes':''}" href="${a.url}" target="_blank" rel="noopener noreferrer">
+        <a class="news-card${a.mentions_tuffes?' tuffes':''}" href="${href}" target="_blank" rel="noopener noreferrer">
           <div class="news-card-meta">
-            <span class="news-source">${a.source_name||''}</span>
+            <span class="news-source">${escHtml(a.source_name||'')}</span>
             <span class="news-date">${dateStr}</span>
             ${a.mentions_tuffes ? '<span class="news-badge">Tuffes</span>' : ''}
           </div>
-          <div class="news-title">${a.title||''}</div>
+          <div class="news-title">${escHtml(a.title||'')}</div>
           <span class="news-read">Lire l'article →</span>
         </a>`;
     }).join('');
@@ -1115,7 +1139,6 @@ async function loadEvents() {
     allEvents = data || [];
     applyFilter(activeFilter);
   } catch (err) {
-    console.error('Erreur Supabase:', err);
     document.getElementById('events-grid').innerHTML =
       '<div class="state-msg">Impossible de charger les événements. Réessayez plus tard.</div>';
     document.getElementById('event-count').textContent = '';
@@ -1144,7 +1167,7 @@ function openDetail(id) {
   const col = sportColor(sc);
 
   document.getElementById('d-sport-tag').innerHTML =
-    `<span style="background:${col}22;color:${col};border:1px solid ${col}44;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:100px;">${ev.sport||'Nordique'}</span>`;
+    `<span style="background:${col}22;color:${col};border:1px solid ${col}44;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:100px;">${escHtml(ev.sport||'Nordique')}</span>`;
   document.getElementById('d-title').textContent = ev.title;
   document.getElementById('d-date').textContent = formatDateLong(ev.date_start, ev.date_end);
   document.getElementById('d-discipline').textContent = ev.sport || '—';
@@ -1170,10 +1193,10 @@ function openDetail(id) {
   }
 
   const srcName = ev.source_name || 'Source inconnue';
-  const srcUrl  = ev.source_url  || null;
+  const srcUrl  = safeUrl(ev.source_url || null);
   document.getElementById('d-source').innerHTML = srcUrl
-    ? `<a href="${srcUrl}" target="_blank" rel="noopener">${srcName}<br><span style="font-size:10px;opacity:.65;">${srcUrl}</span></a>`
-    : srcName;
+    ? `<a href="${escHtml(srcUrl)}" target="_blank" rel="noopener">${escHtml(srcName)}<br><span style="font-size:10px;opacity:.65;">${escHtml(srcUrl)}</span></a>`
+    : escHtml(srcName);
 
   document.getElementById('detail-overlay').classList.add('open');
 }
@@ -1203,6 +1226,7 @@ document.getElementById('mod-overlay').addEventListener('click', e => {
 });
 
 async function submitModRequest() {
+  if (document.getElementById('mod-hp').value) return; // honeypot
   const email = document.getElementById('mod-email').value.trim();
   const message = document.getElementById('mod-message').value.trim();
   if (!email || !message) {
@@ -1265,6 +1289,7 @@ function getRadioValue(name) {
 }
 
 async function submitForm() {
+  if (document.getElementById('form-hp').value) return; // honeypot
   const name = document.getElementById('f-name').value.trim();
   const sport = document.getElementById('f-sport').value;
   const dateStart = document.getElementById('f-date-start').value;
@@ -1309,14 +1334,12 @@ async function submitForm() {
         'Lien source':     document.getElementById('f-link').value.trim() || '—',
         'Informations':    document.getElementById('f-other').value.trim() || '—',
         'Email contact':   emailContact || '—',
-        'Lien admin':      'https://stadedestuffes.fr/admin.html',
       }),
     }).catch(() => {});
 
     document.getElementById('form-fields').style.display = 'none';
     document.getElementById('form-success').style.display = 'block';
   } catch (err) {
-    console.error('Erreur soumission:', err);
     alert('Une erreur est survenue. Réessayez dans quelques instants.');
   }
 }

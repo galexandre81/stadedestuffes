@@ -29,6 +29,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — Stade des Tuffes</title>
   <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://arkbrvzacbereyukqfte.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self';">
+  <meta name="referrer" content="no-referrer">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
@@ -182,11 +184,15 @@
     <div class="login-pretitle">Espace administration</div>
     <div class="login-title">Connexion</div>
     <div class="login-group">
+      <label class="login-label">Email</label>
+      <input class="login-input" type="email" id="login-email" placeholder="admin@example.com" autocomplete="username">
+    </div>
+    <div class="login-group">
       <label class="login-label">Mot de passe</label>
       <input class="login-input" type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password">
     </div>
-    <button class="btn-login" onclick="doLogin()">Accéder →</button>
-    <div class="login-error" id="login-error">Mot de passe incorrect.</div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Accéder →</button>
+    <div class="login-error" id="login-error">Email ou mot de passe incorrect.</div>
   </div>
 </div>
 
@@ -213,11 +219,6 @@
 
 <script>
 // ================================================================
-// ⚙️  CHANGER CE MOT DE PASSE
-// ================================================================
-const ADMIN_PASSWORD = 'x!AF4yBDCLSdTm6p';   // ← modifiez ici
-
-// ================================================================
 // SUPABASE
 // ================================================================
 const SUPABASE_URL      = 'https://arkbrvzacbereyukqfte.supabase.co';
@@ -229,26 +230,41 @@ let currentTab   = 'pending';
 let allEvents    = [];
 
 // ================================================================
-// AUTH (mot de passe local + sessionStorage)
+// AUTH — Supabase Auth (email + mot de passe)
 // ================================================================
-function doLogin() {
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
   const pwd   = document.getElementById('login-pwd').value;
   const errEl = document.getElementById('login-error');
-  if (pwd === ADMIN_PASSWORD) {
-    sessionStorage.setItem('admin_ok', '1');
-    showApp();
-  } else {
+  const btn   = document.getElementById('btn-login');
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Connexion…';
+
+  const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+
+  btn.disabled = false;
+  btn.textContent = 'Accéder →';
+
+  if (error) {
     errEl.style.display = 'block';
     document.getElementById('login-pwd').value = '';
     document.getElementById('login-pwd').focus();
+  } else {
+    showApp();
   }
 }
+
 document.getElementById('login-pwd').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
+document.getElementById('login-email').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-pwd').focus();
+});
 
-function logout() {
-  sessionStorage.removeItem('admin_ok');
+async function logout() {
+  await sb.auth.signOut();
   location.reload();
 }
 
@@ -260,8 +276,10 @@ function showApp() {
   loadEvents();
 }
 
-// Restaurer session si déjà connecté
-if (sessionStorage.getItem('admin_ok') === '1') showApp();
+// Restaurer session Supabase si déjà connecté
+sb.auth.getSession().then(({ data }) => {
+  if (data.session) showApp();
+});
 
 // ================================================================
 // LOAD EVENTS
@@ -279,16 +297,7 @@ async function loadEvents() {
     renderTab(currentTab);
   } catch (err) {
     document.getElementById('events-list').innerHTML =
-      `<div class="state-msg">
-        Erreur de chargement. Vérifiez que les politiques RLS sont configurées.<br>
-        <small style="color:#ff8080;display:block;margin-top:8px;">${err.message}</small>
-        <small style="color:var(--muted);display:block;margin-top:6px;">
-          Exécutez dans Supabase SQL Editor :<br>
-          CREATE POLICY "anon_select_all" ON events FOR SELECT TO anon USING (true);<br>
-          CREATE POLICY "anon_update_all" ON events FOR UPDATE TO anon USING (true) WITH CHECK (true);<br>
-          CREATE POLICY "anon_delete_all" ON events FOR DELETE TO anon USING (true);
-        </small>
-      </div>`;
+      '<div class="state-msg">Erreur de chargement. Vérifiez votre connexion et les droits d\'accès.</div>';
   }
 }
 
@@ -430,8 +439,10 @@ function buildCard(ev) {
 }
 
 function esc(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function toggleEdit(id) {
   document.getElementById(`edit-${id}`).classList.toggle('open');
@@ -457,14 +468,14 @@ async function rejectEvent(id) {
 async function deleteEvent(id) {
   if (!confirm('Supprimer définitivement cet événement ?')) return;
   const { error } = await sb.from('events').delete().eq('id', id);
-  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  if (error) { showToast('Une erreur est survenue. Réessayez.', 'error'); return; }
   showToast('Événement supprimé.', 'success');
   allEvents = allEvents.filter(e => e.id !== id);
   renderTab(currentTab);
 }
 async function updateStatus(id, status) {
   const { error } = await sb.from('events').update({ status }).eq('id', id);
-  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  if (error) { showToast('Une erreur est survenue. Réessayez.', 'error'); return; }
   const labels = { published: 'Publié ✓', pending: 'Dépublié', rejected: 'Rejeté' };
   showToast(labels[status] || 'Mis à jour.', 'success');
   const ev = allEvents.find(e => e.id === id);
@@ -474,7 +485,7 @@ async function updateStatus(id, status) {
 async function saveEvent(id) {
   const payload = buildPayload(id);
   const { error } = await sb.from('events').update(payload).eq('id', id);
-  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  if (error) { showToast('Une erreur est survenue. Réessayez.', 'error'); return; }
   showToast('Modifications enregistrées.', 'success');
   const ev = allEvents.find(e => e.id === id);
   if (ev) Object.assign(ev, payload);
@@ -483,7 +494,7 @@ async function saveEvent(id) {
 async function saveAndPublish(id) {
   const payload = { ...buildPayload(id), status: 'published' };
   const { error } = await sb.from('events').update(payload).eq('id', id);
-  if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+  if (error) { showToast('Une erreur est survenue. Réessayez.', 'error'); return; }
   showToast('Enregistré et publié ✓', 'success');
   const ev = allEvents.find(e => e.id === id);
   if (ev) Object.assign(ev, payload);

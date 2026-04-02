@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Actualités Nordiques — Stade des Tuffes</title>
   <meta name="description" content="Articles et actualités du ski nordique français : ski de fond, biathlon, saut à ski, combiné nordique. Sélection autour du Stade des Tuffes, Prémanon, Jura.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://arkbrvzacbereyukqfte.supabase.co https://www.google-analytics.com https://analytics.google.com; frame-src 'none'; object-src 'none'; base-uri 'self';">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,400&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
@@ -259,7 +261,7 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-00973E87ZQ');
+    gtag('config', 'G-00973E87ZQ', { 'anonymize_ip': true });
   </script>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
@@ -382,16 +384,18 @@ function buildCard(a) {
   const tuffes = a.mentions_tuffes;
   const tags   = Array.isArray(a.sport_tags) ? a.sport_tags : [];
 
-  const imgHtml = a.image_url
-    ? `<img class="card-img" src="${escHtml(a.image_url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+  const imgSrc = safeUrl(a.image_url);
+  const imgHtml = imgSrc
+    ? `<img class="card-img" src="${escHtml(imgSrc)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div class="card-img-placeholder" style="display:none"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-1 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>`
     : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-1 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>`;
 
-  const sportTags = tags.map(t => `<span class="sport-tag ${t}">${t}</span>`).join('');
+  const sportTags = tags.map(t => `<span class="sport-tag ${escHtml(t)}">${escHtml(t)}</span>`).join('');
   const tuffeBadge = tuffes ? `<span class="badge-tuffes">⛰ Tuffes</span>` : '';
+  const articleHref = escHtml(safeUrl(a.url) || '#');
 
   return `
-    <a class="article-card${tuffes?' tuffes-highlight':''}" href="${escHtml(a.url)}" target="_blank" rel="noopener noreferrer">
+    <a class="article-card${tuffes?' tuffes-highlight':''}" href="${articleHref}" target="_blank" rel="noopener noreferrer">
       ${imgHtml}
       <div class="card-body">
         <div class="card-meta">
@@ -411,10 +415,17 @@ function buildCard(a) {
 }
 
 function escHtml(s) {
-  if (!s) return '';
+  if (s == null) return '';
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function safeUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? url : null;
+  } catch { return null; }
 }
 
 // ================================================================
@@ -527,7 +538,6 @@ async function loadArticles() {
     buildSourceFilters();
     render();
   } catch (err) {
-    console.error('Erreur Supabase:', err);
     document.getElementById('articles-grid').innerHTML =
       '<div class="state-msg">Impossible de charger les articles. Réessayez plus tard.</div>';
     document.getElementById('article-count').textContent = '';
