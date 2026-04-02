@@ -126,6 +126,73 @@
       cursor: pointer; transition: all .15s;
     }
     .btn-announce:hover { background: white; color: var(--deep); border-color: white; }
+    .btn-esf {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; padding: 8px 16px;
+      background: var(--accent); border: 1px solid var(--accent); color: white;
+      cursor: pointer; transition: all .15s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-esf:hover { background: #c2241e; border-color: #c2241e; color: white; }
+
+    /* ---- CINQ CIBLES AD ---- */
+    .ad-cinqcibles {
+      margin: 0 32px 48px;
+      background: #0a0a0a;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: stretch; overflow: hidden;
+      position: relative;
+    }
+    .ad-cinqcibles-target {
+      flex-shrink: 0; width: 180px;
+      background: #111;
+      display: flex; align-items: center; justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      padding: 32px;
+    }
+    .target-svg { width: 100px; height: 100px; opacity: 0.9; }
+    .ad-cinqcibles-body {
+      flex: 1; padding: 32px 36px;
+      display: flex; flex-direction: column; justify-content: center; gap: 10px;
+    }
+    .ad-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 8px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase;
+      color: #666;
+    }
+    .ad-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(40px, 6vw, 72px); font-weight: 400;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: #fff; line-height: 0.9;
+    }
+    .ad-brand em { font-style: normal; color: var(--accent); }
+    .ad-tagline {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px; font-weight: 400; letter-spacing: 1px;
+      color: #aaa; margin-top: 2px;
+    }
+    .ad-copy {
+      font-family: 'Barlow', sans-serif;
+      font-size: 12px; color: #777; line-height: 1.5; max-width: 400px;
+    }
+    .ad-cta {
+      display: inline-block; margin-top: 8px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 2.5px; text-transform: uppercase; padding: 9px 20px;
+      background: white; color: #0a0a0a;
+      text-decoration: none; transition: opacity .15s; align-self: flex-start;
+    }
+    .ad-cta:hover { opacity: .8; }
+    .ad-mention {
+      font-family: 'Barlow', sans-serif; font-size: 8px; letter-spacing: 1px;
+      text-transform: uppercase; color: #333; margin-top: 4px;
+    }
+    @media (max-width: 640px) {
+      .ad-cinqcibles { flex-direction: column; margin: 0 16px 36px; }
+      .ad-cinqcibles-target { width: 100%; height: 100px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 20px; }
+      .target-svg { width: 60px; height: 60px; }
+      .ad-cinqcibles-body { padding: 24px 20px; }
+    }
 
     /* ---- NAV LINKS ---- */
     .nav-links { display: flex; align-items: center; gap: 0; }
@@ -588,6 +655,7 @@
     </div>
     <div class="nav-right">
       <span class="season-badge">Saison 2025–26</span>
+      <a class="btn-esf" href="https://www.esf-lesrousses.com/nordique/montagne-experiences/visite-stade-tuffes-raquettes/" target="_blank" rel="noopener">⛷ Visitez les Tuffes avec l'ESF</a>
       <button class="btn-announce" onclick="openForm()">+ Soumettre un événement</button>
     </div>
   </nav>
@@ -676,6 +744,29 @@
     <div class="cta-sub">Toutes les infos pratiques : accès, parking, hébergement</div>
   </div>
   <a class="cta-btn" href="venir-aux-tuffes.html">Préparer ma venue →</a>
+</div>
+
+<!-- PUB CINQ CIBLES -->
+<div class="ad-cinqcibles">
+  <div class="ad-cinqcibles-target">
+    <svg class="target-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="48" stroke="white" stroke-width="1.2" opacity="0.15"/>
+      <circle cx="50" cy="50" r="37" stroke="white" stroke-width="1.2" opacity="0.25"/>
+      <circle cx="50" cy="50" r="26" stroke="#E8302A" stroke-width="1.5" opacity="0.55"/>
+      <circle cx="50" cy="50" r="15" stroke="#E8302A" stroke-width="1.5" opacity="0.8"/>
+      <circle cx="50" cy="50" r="5" fill="#E8302A"/>
+      <line x1="50" y1="0" x2="50" y2="100" stroke="white" stroke-width="0.6" opacity="0.1"/>
+      <line x1="0" y1="50" x2="100" y2="50" stroke="white" stroke-width="0.6" opacity="0.1"/>
+    </svg>
+  </div>
+  <div class="ad-cinqcibles-body">
+    <div class="ad-label">Partenaire — Esprit Biathlon</div>
+    <div class="ad-brand"><em>Cinq</em> Cibles</div>
+    <div class="ad-tagline">La première marque lifestyle du biathlon</div>
+    <div class="ad-copy">Chaque achat soutient directement les athlètes et les clubs. Portez les couleurs du biathlon avec style — ski de fond, hors-piste et canapé compris.</div>
+    <a class="ad-cta" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener">Découvrir la collection →</a>
+    <div class="ad-mention">Publicité</div>
+  </div>
 </div>
 
 <!-- DETAIL MODAL -->
