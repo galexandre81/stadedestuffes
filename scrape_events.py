@@ -69,6 +69,13 @@ MOIS_FR = {
     "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12,
 }
 
+# Abréviations françaises utilisées dans le calendrier FFS
+MOIS_ABBR = {
+    "jan": 1, "fév": 2, "fev": 2, "mar": 3, "avr": 4,
+    "mai": 5, "juin": 6, "juil": 7, "aou": 8, "aoû": 8,
+    "sep": 9, "oct": 10, "nov": 11, "déc": 12, "dec": 12,
+}
+
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def clean_html(raw: str) -> str:
@@ -155,6 +162,63 @@ def extract_date_from_text(text: str) -> str | None:
                     pass
 
     return None
+
+
+def extract_ffs_calendar_date(item) -> tuple[str | None, str | None]:
+    """
+    Parse le bloc date d'un item du calendrier FFS.
+    Structure HTML : <div class="el-date"> contenant <span class="date-day">, mois abrégé, année,
+    et optionnellement <span class="date-to"> pour la date de fin.
+    Retourne (date_start, date_end) au format YYYY-MM-DD.
+    """
+    date_div = item.select_one(".el-date") or item.select_one(".cbo-date")
+    if not date_div:
+        return None, None
+
+    full_text = date_div.get_text(separator=" ", strip=True)
+
+    # Chercher l'année (20XX)
+    year_m = re.search(r'20\d{2}', full_text)
+    year = int(year_m.group(0)) if year_m else datetime.now(timezone.utc).year
+
+    def parse_day_month(day_span, siblings_text: str) -> str | None:
+        if not day_span:
+            return None
+        try:
+            day = int(day_span.get_text(strip=True))
+        except ValueError:
+            return None
+        # Cherche une abréviation de mois dans les siblings
+        m_key = re.search(r'[A-Za-zÀ-ÿ]{3,4}', siblings_text)
+        if not m_key:
+            return None
+        key = m_key.group(0).lower().rstrip(".")
+        month = MOIS_ABBR.get(key[:4]) or MOIS_ABBR.get(key[:3])
+        if not month:
+            return None
+        return f"{year}-{month:02d}-{day:02d}"
+
+    # Premier jour
+    first_day_span = date_div.select_one("span.date-day")
+    after_first = ""
+    if first_day_span:
+        for sib in first_day_span.next_siblings:
+            t = str(sib).strip()
+            if t:
+                after_first += " " + BeautifulSoup(t, "html.parser").get_text(strip=True)
+    date_start = parse_day_month(first_day_span, after_first)
+
+    # Date de fin (optionnel)
+    date_end = None
+    date_to = date_div.select_one(".date-to")
+    if date_to:
+        last_day_span = date_to.select_one("span.date-day")
+        after_last = date_to.get_text(separator=" ", strip=True)
+        date_end = parse_day_month(last_day_span, after_last)
+        if date_end is None:
+            date_end = date_start  # même jour si pas de fin
+
+    return date_start, date_end
 
 
 def make_event_row(title: str, date_str: str | None, sport: str,
@@ -341,30 +405,19 @@ def scrape_ffs_calendrier_events() -> int:
             if not is_lieu_tuffes(title) and not is_lieu_tuffes(full_item_text):
                 continue
 
-            # Cherche lien éventuel pour détail
+            # Cherche lien éventuel pour détail (ignorer les URLs Cloudflare email-protection)
             link = item.find("a", href=True)
-            url_detail = link["href"].strip() if link else url
+            raw_href = link["href"].strip() if link else ""
+            url_detail = raw_href if raw_href and "/cdn-cgi/" not in raw_href else url
 
             # pour éviter doublons
             if url_detail in seen_urls:
                 continue
             seen_urls.add(url_detail)
 
-            # Extraire date du texte visuel (DD-MM Jan. YYYY)
-            date_span = item.find("span", class_="date-day")
-            date_text = date_span.get_text(strip=True) if date_span else ""
-            date_event = extract_date_from_text(full_item_text)
-
-            # Si pas trouvé : essayer de parser la date visible (ex: "03-04 Jan. 2026")
-            if not date_event and date_text:
-                # le format DD-MM, on prend juste le jour
-                from_text = f"{date_text} {full_item_text[full_item_text.find(date_text)+len(date_text):]}"
-                date_event = extract_date_from_text(from_text)
-
-            if not date_event:
-                # Essayer d'extraire depuis détail si lien présent
-                detail = fetch_ffs_calendrier_detail(url_detail) if url_detail and url_detail != url else {}
-                date_event = detail.get("date") or extract_date_from_text(detail.get("full_text", ""))
+            # Extraire date depuis le HTML structuré du calendrier FFS
+            date_start, date_end = extract_ffs_calendar_date(item)
+            date_event = date_start or extract_date_from_text(full_item_text)
 
             # on exige une date
             if not date_event:
@@ -382,9 +435,10 @@ def scrape_ffs_calendrier_events() -> int:
                 notes=title[:500],
                 status="published",
             )
+            row["date_end"] = date_end
 
             if upsert_event(row):
-                log.info("   + FFS calendrier %s event : %s (%s)", sport_detected, title[:60], date_event)
+                log.info("   + FFS calendrier %s : %s (%s → %s)", sport_detected, title[:60], date_event, date_end)
                 inserted += 1
 
         time.sleep(0.5)
