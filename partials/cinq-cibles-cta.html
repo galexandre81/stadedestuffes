@@ -1,0 +1,79 @@
+<!--
+  Cinq Cibles CTA — rotation aléatoire 5 variations (format compact ~90px).
+  Logo SVG, layout horizontal, couleurs --surface / --accent (avec fallbacks).
+  Le bloc <script> en bas choisit aléatoirement la variation à afficher au load.
+-->
+<aside class="cc-cta-rotate" role="complementary" aria-label="Partenaire Cinq Cibles">
+
+  <div class="cc-variant" data-name="voisin">
+    <a class="cc-logo" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener" aria-label="Cinq Cibles">
+      <img src="/cinqcibles-logo.svg" alt="" loading="lazy">
+    </a>
+    <div class="cc-body">
+      <div class="cc-label">Partenaire</div>
+      <div class="cc-headline">Brodé à Prémanon, à 800m du pas de tir.</div>
+      <div class="cc-explain">Cinq Cibles est née aux Rousses, brodée localement.</div>
+    </div>
+    <a class="cc-cta" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener">Voir la boutique →</a>
+  </div>
+
+  <div class="cc-variant" data-name="sponsor">
+    <a class="cc-logo" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener" aria-label="Cinq Cibles">
+      <img src="/cinqcibles-logo.svg" alt="" loading="lazy">
+    </a>
+    <div class="cc-body">
+      <div class="cc-label">Partenaire</div>
+      <div class="cc-headline">Vous suivez ce calendrier. Vous êtes déjà le sponsor.</div>
+      <div class="cc-explain">Une part des ventes va aux athlètes via le Fonds Biathlon.</div>
+    </div>
+    <a class="cc-cta" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener">Voir la boutique →</a>
+  </div>
+
+  <div class="cc-variant" data-name="pommes">
+    <a class="cc-logo" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener" aria-label="Cinq Cibles">
+      <img src="/cinqcibles-logo.svg" alt="" loading="lazy">
+    </a>
+    <div class="cc-body">
+      <div class="cc-label">Partenaire</div>
+      <div class="cc-headline">Une caisse de pommes pour une victoire mondiale.</div>
+      <div class="cc-explain">Cinq Cibles existe depuis cette anecdote (Benjamin Daviet, para-biathlon).</div>
+    </div>
+    <a class="cc-cta" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener">Voir la boutique →</a>
+  </div>
+
+  <div class="cc-variant" data-name="slow">
+    <a class="cc-logo" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener" aria-label="Cinq Cibles">
+      <img src="/cinqcibles-logo.svg" alt="" loading="lazy">
+    </a>
+    <div class="cc-body">
+      <div class="cc-label">Partenaire</div>
+      <div class="cc-headline">Brodé à la commande. Pas de surstock.</div>
+      <div class="cc-explain">Coton certifié, fabriqué après commande, dans le Haut-Jura.</div>
+    </div>
+    <a class="cc-cta" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener">Voir la boutique →</a>
+  </div>
+
+  <div class="cc-variant" data-name="collabs">
+    <a class="cc-logo" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener" aria-label="Cinq Cibles">
+      <img src="/cinqcibles-logo.svg" alt="" loading="lazy">
+    </a>
+    <div class="cc-body">
+      <div class="cc-label">Partenaire</div>
+      <div class="cc-headline">Drops athlètes en précommande.</div>
+      <div class="cc-explain">Vous portez leur identité, vous financez leurs objectifs.</div>
+    </div>
+    <a class="cc-cta" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener">Voir la boutique →</a>
+  </div>
+
+</aside>
+
+<script>
+(function () {
+  var root = document.querySelector('.cc-cta-rotate');
+  if (!root) return;
+  var variants = root.querySelectorAll('.cc-variant');
+  if (!variants.length) return;
+  var idx = Math.floor(Math.random() * variants.length);
+  variants[idx].classList.add('active');
+})();
+</script>

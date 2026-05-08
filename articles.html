@@ -39,6 +39,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,400&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/cinq-cibles-cta.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
   <style>
@@ -397,6 +398,25 @@
   <!-- PAGINATION -->
   <div class="pagination" id="pagination"></div>
 </div>
+
+<!-- PUB CINQ CIBLES (rotation 5 variations via partial) -->
+<div id="cc-cta-mount"></div>
+<script>
+fetch('/partials/cinq-cibles-cta.html')
+  .then(function (r) { return r.text(); })
+  .then(function (html) {
+    var mount = document.getElementById('cc-cta-mount');
+    if (!mount) return;
+    mount.innerHTML = html;
+    var inline = mount.querySelector('script');
+    if (inline) {
+      var s = document.createElement('script');
+      s.textContent = inline.textContent;
+      document.body.appendChild(s);
+    }
+  })
+  .catch(function () { /* silencieux : la page se rend sans le CTA */ });
+</script>
 
 <script>
 // ================================================================

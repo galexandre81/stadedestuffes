@@ -40,6 +40,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/cinq-cibles-cta.css">
 
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -166,60 +167,7 @@
     }
     .btn-esf:hover { background: #c2241e; border-color: #c2241e; color: white; }
 
-    /* ---- CINQ CIBLES AD ---- */
-    .ad-cinqcibles {
-      margin: 0 32px 40px;
-      display: flex; align-items: stretch; overflow: hidden;
-      position: relative;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.35);
-    }
-    .ad-cinqcibles-logo {
-      flex-shrink: 0; width: 90px;
-      background: #000;
-      display: flex; align-items: center; justify-content: center;
-      padding: 10px;
-    }
-    .logo-cinq-img { width: 70px; height: 70px; display: block; }
-    .ad-cinqcibles-body {
-      flex: 1; padding: 14px 22px;
-      background: var(--surface);
-      border-left: 2px solid rgba(75,163,217,0.18);
-      display: flex; flex-direction: column; justify-content: center; gap: 4px;
-    }
-    .ad-label {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 7px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--muted);
-    }
-    .ad-brand {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(26px, 3.5vw, 38px); font-weight: 400;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--text); line-height: 1;
-    }
-    .ad-tagline {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 11px; font-weight: 400; letter-spacing: 0.3px;
-      color: rgba(255,255,255,0.5);
-    }
-    .ad-cta {
-      display: inline-block; margin-top: 6px;
-      font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600;
-      letter-spacing: 2px; text-transform: uppercase; padding: 6px 14px;
-      background: var(--accent); color: #fff;
-      text-decoration: none; transition: opacity .15s; align-self: flex-start;
-    }
-    .ad-cta:hover { opacity: .82; }
-    .ad-mention {
-      font-family: 'Barlow', sans-serif; font-size: 7px; letter-spacing: 1px;
-      text-transform: uppercase; color: rgba(255,255,255,0.15); margin-top: 2px;
-    }
-    @media (max-width: 640px) {
-      .ad-cinqcibles { margin: 0 16px 28px; }
-      .ad-cinqcibles-logo { width: 72px; padding: 8px; }
-      .logo-cinq-img { width: 56px; height: 56px; }
-      .ad-cinqcibles-body { padding: 12px 16px; }
-    }
+    /* CINQ CIBLES AD : déplacé dans assets/css/cinq-cibles-cta.css (rotation) */
 
     /* ---- NAV LINKS ---- */
     .nav-links { display: flex; align-items: center; gap: 0; }
@@ -819,19 +767,24 @@
   <a class="cta-btn" href="venir-aux-tuffes.html">Préparer ma venue →</a>
 </div>
 
-<!-- PUB CINQ CIBLES -->
-<div class="ad-cinqcibles">
-  <div class="ad-cinqcibles-logo">
-    <img class="logo-cinq-img" src="cinqcibles-logo.svg" alt="Cinq Cibles"/>
-  </div>
-  <div class="ad-cinqcibles-body">
-    <div class="ad-label">Partenaire</div>
-    <div class="ad-brand">Cinq Cibles</div>
-    <div class="ad-tagline">La marque des fans de biathlon — chaque achat finance directement les athlètes.</div>
-    <a class="ad-cta" href="https://www.cinqcibles.fr/" target="_blank" rel="noopener">Voir la boutique →</a>
-    <div class="ad-mention">Publicité</div>
-  </div>
-</div>
+<!-- PUB CINQ CIBLES (rotation 5 variations via partial) -->
+<div id="cc-cta-mount"></div>
+<script>
+fetch('/partials/cinq-cibles-cta.html')
+  .then(function (r) { return r.text(); })
+  .then(function (html) {
+    var mount = document.getElementById('cc-cta-mount');
+    if (!mount) return;
+    mount.innerHTML = html;
+    var inline = mount.querySelector('script');
+    if (inline) {
+      var s = document.createElement('script');
+      s.textContent = inline.textContent;
+      document.body.appendChild(s);
+    }
+  })
+  .catch(function () { /* silencieux : la page se rend sans le CTA */ });
+</script>
 
 <!-- DETAIL MODAL -->
 <div class="overlay" id="detail-overlay">
