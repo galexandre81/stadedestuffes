@@ -34,6 +34,72 @@
   }
   </script>
 
+  <!-- Schema.org FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Comment se rendre au Stade Nordique des Tuffes en voiture ou en transport en commun ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Le stade se situe à Prémanon (39220), Route des Tremplins, dans le Haut-Jura. En voiture, comptez environ 45 minutes depuis Genève, 55 minutes depuis Lausanne, 2 heures depuis Lyon et 4 h 30 depuis Paris. En transport en commun, l'offre est limitée : la gare la plus proche est Morez ou Saint-Claude, puis liaison locale. Pendant les grands événements, des navettes peuvent être organisées depuis Les Rousses ou les parkings relais — vérifiez auprès de l'office de tourisme des Rousses ou de l'organisateur de la compétition."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Où se garer pour assister à une compétition ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Le parking principal P1, d'environ 100 places, se trouve à 250 mètres avant l'entrée du stade, sur la Route des Tremplins. Il est libre d'accès pour les entraînements et les compétitions régionales. Lors des grands événements (Coupe du Monde, Championnats de France), un dispositif spécifique est mis en place avec parkings relais et navettes organisés par les organisateurs ; il est alors recommandé d'arriver tôt et de consulter les informations pratiques propres à chaque événement."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Quelles disciplines peut-on voir au Stade des Tuffes ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Le Stade Nordique des Tuffes accueille les quatre disciplines nordiques olympiques : biathlon, ski de fond, combiné nordique et saut à ski. Le site est adossé au Centre National de Ski Nordique et de Moyenne Montagne (CNSNMM), pôle d'entraînement des athlètes français. Le stade a été officiellement renommé Stade Jason Lamy-Chappuis, en hommage au champion olympique de combiné nordique originaire de la région."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Le stade est-il ouvert au public en dehors des compétitions ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "En saison hivernale, les pistes du domaine nordique sont accessibles aux skieurs (ski de fond, biathlon découverte) avec un forfait du domaine, dans le cadre de l'Espace Loisirs des Rousses. Les infrastructures fermées du stade (tremplins, pas de tir) restent réservées aux athlètes et stages encadrés. Pour connaître les horaires, l'enneigement et les conditions d'accès aux pistes, consultez le site officiel des Rousses ou l'office de tourisme."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Y a-t-il une restauration sur place pendant les événements ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Lors des grands événements internationaux et nationaux, une offre de restauration est généralement proposée sur le site (food trucks, buvettes, stands partenaires). Pour les compétitions plus modestes ou les rendez-vous régionaux, la restauration n'est pas systématique : prévoyez de quoi vous restaurer ou de vous reporter sur les villages voisins (Les Rousses, Prémanon). Consultez le programme officiel de chaque événement pour confirmation."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Quelle est la meilleure période pour visiter le stade nordique ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "La saison de compétition s'étend principalement de décembre à mars, avec les rendez-vous majeurs (Coupe du Monde, Championnats de France, étapes IBU) concentrés sur ces mois. En été, le site reste fréquenté pour la randonnée, le VTT et certains événements estivaux organisés dans le massif du Jura. Consultez le calendrier sur stadedestuffes.fr ou les sites officiels pour planifier votre venue selon la discipline qui vous intéresse."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Ce site est-il officiel ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Non. stadedestuffes.fr est un agrégateur indépendant et non officiel. Il ne représente ni le CNSNMM, ni la Station des Rousses, ni la Fédération Française de Ski, ni les clubs locaux. Notre rôle est de rassembler en un seul endroit calendrier des compétitions, revue de presse et infos pratiques, en renvoyant systématiquement vers les sources officielles pour la confirmation des dates, horaires et conditions d'accès. Cette transparence est volontaire."
+        }
+      }
+    ]
+  }
+  </script>
+
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.google-analytics.com https://analytics.google.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self';">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -389,6 +455,63 @@
     }
     .heberg-cta:hover { background: var(--cyan); color: var(--bleu); }
 
+    /* ─── FAQ ─── */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: .8rem;
+    }
+    .faq-list details {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+      transition: border-color .2s, background .2s;
+    }
+    .faq-list details[open] {
+      border-color: rgba(0,180,216,.4);
+      background: rgba(0,180,216,.05);
+    }
+    .faq-list summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 1.1rem 1.4rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: .02em;
+      color: var(--blanc);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .faq-list summary::-webkit-details-marker { display: none; }
+    .faq-list summary::after {
+      content: '+';
+      flex-shrink: 0;
+      width: 1.6rem;
+      height: 1.6rem;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(0,180,216,.4);
+      border-radius: 50%;
+      color: var(--cyan);
+      font-size: 1.1rem;
+      font-weight: 400;
+      transition: transform .2s, background .2s;
+    }
+    .faq-list details[open] summary::after {
+      content: '−';
+      background: rgba(0,180,216,.15);
+    }
+    .faq-list summary:hover { color: var(--cyan); }
+    .faq-list .faq-answer {
+      padding: 0 1.4rem 1.2rem;
+      font-size: .98rem;
+      line-height: 1.7;
+      color: var(--neige);
+    }
+
     /* ─── DIVIDER ─── */
     hr.divider {
       border: none;
@@ -628,6 +751,55 @@
     <a class="heberg-cta" href="https://www.lesrousses.com/hebergements/" target="_blank" rel="noopener">
       Rechercher un hébergement sur la station →
     </a>
+  </section>
+
+  <hr class="divider">
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="section-label">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+      </div>
+      <h2>Questions fréquentes</h2>
+    </div>
+
+    <div class="faq-list">
+      <details>
+        <summary>Comment se rendre au Stade Nordique des Tuffes en voiture ou en transport en commun ?</summary>
+        <p class="faq-answer">Le stade se situe à Prémanon (39220), Route des Tremplins, dans le Haut-Jura. En voiture, comptez environ 45 minutes depuis Genève, 55 minutes depuis Lausanne, 2 heures depuis Lyon et 4 h 30 depuis Paris. En transport en commun, l'offre est limitée : la gare la plus proche est Morez ou Saint-Claude, puis liaison locale. Pendant les grands événements, des navettes peuvent être organisées depuis Les Rousses ou les parkings relais — vérifiez auprès de l'office de tourisme des Rousses ou de l'organisateur de la compétition.</p>
+      </details>
+
+      <details>
+        <summary>Où se garer pour assister à une compétition ?</summary>
+        <p class="faq-answer">Le parking principal P1, d'environ 100 places, se trouve à 250 mètres avant l'entrée du stade, sur la Route des Tremplins. Il est libre d'accès pour les entraînements et les compétitions régionales. Lors des grands événements (Coupe du Monde, Championnats de France), un dispositif spécifique est mis en place avec parkings relais et navettes organisés par les organisateurs ; il est alors recommandé d'arriver tôt et de consulter les informations pratiques propres à chaque événement.</p>
+      </details>
+
+      <details>
+        <summary>Quelles disciplines peut-on voir au Stade des Tuffes ?</summary>
+        <p class="faq-answer">Le Stade Nordique des Tuffes accueille les quatre disciplines nordiques olympiques : biathlon, ski de fond, combiné nordique et saut à ski. Le site est adossé au Centre National de Ski Nordique et de Moyenne Montagne (CNSNMM), pôle d'entraînement des athlètes français. Le stade a été officiellement renommé Stade Jason Lamy-Chappuis, en hommage au champion olympique de combiné nordique originaire de la région.</p>
+      </details>
+
+      <details>
+        <summary>Le stade est-il ouvert au public en dehors des compétitions ?</summary>
+        <p class="faq-answer">En saison hivernale, les pistes du domaine nordique sont accessibles aux skieurs (ski de fond, biathlon découverte) avec un forfait du domaine, dans le cadre de l'Espace Loisirs des Rousses. Les infrastructures fermées du stade (tremplins, pas de tir) restent réservées aux athlètes et stages encadrés. Pour connaître les horaires, l'enneigement et les conditions d'accès aux pistes, consultez le site officiel des Rousses ou l'office de tourisme.</p>
+      </details>
+
+      <details>
+        <summary>Y a-t-il une restauration sur place pendant les événements ?</summary>
+        <p class="faq-answer">Lors des grands événements internationaux et nationaux, une offre de restauration est généralement proposée sur le site (food trucks, buvettes, stands partenaires). Pour les compétitions plus modestes ou les rendez-vous régionaux, la restauration n'est pas systématique : prévoyez de quoi vous restaurer ou de vous reporter sur les villages voisins (Les Rousses, Prémanon). Consultez le programme officiel de chaque événement pour confirmation.</p>
+      </details>
+
+      <details>
+        <summary>Quelle est la meilleure période pour visiter le stade nordique ?</summary>
+        <p class="faq-answer">La saison de compétition s'étend principalement de décembre à mars, avec les rendez-vous majeurs (Coupe du Monde, Championnats de France, étapes IBU) concentrés sur ces mois. En été, le site reste fréquenté pour la randonnée, le VTT et certains événements estivaux organisés dans le massif du Jura. Consultez le calendrier sur stadedestuffes.fr ou les sites officiels pour planifier votre venue selon la discipline qui vous intéresse.</p>
+      </details>
+
+      <details>
+        <summary>Ce site est-il officiel ?</summary>
+        <p class="faq-answer">Non. stadedestuffes.fr est un agrégateur indépendant et non officiel. Il ne représente ni le CNSNMM, ni la Station des Rousses, ni la Fédération Française de Ski, ni les clubs locaux. Notre rôle est de rassembler en un seul endroit calendrier des compétitions, revue de presse et infos pratiques, en renvoyant systématiquement vers les sources officielles pour la confirmation des dates, horaires et conditions d'accès. Cette transparence est volontaire.</p>
+      </details>
+    </div>
   </section>
 
 </main>
