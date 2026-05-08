@@ -55,3 +55,44 @@ class TestJaccard:
 
     def test_one_empty(self):
         assert jaccard({"a"}, set()) == 0.0
+
+
+class TestParseFrenchDate:
+    def test_range(self):
+        ds, de = parse_french_date("du 27 au 29 mars 2026")
+        assert ds == "2026-03-27" and de == "2026-03-29"
+
+    def test_simple(self):
+        ds, de = parse_french_date("Le 15 mars 2026 aura lieu")
+        assert ds == "2026-03-15" and de is None
+
+    def test_numeric(self):
+        ds, de = parse_french_date("Date : 31/01/2026")
+        assert ds == "2026-01-31"
+
+    def test_decembre_accent(self):
+        ds, _ = parse_french_date("le 27 décembre 2025")
+        assert ds == "2025-12-27"
+
+    def test_no_date(self):
+        ds, de = parse_french_date("Aucune date ici")
+        assert ds is None and de is None
+
+    def test_empty(self):
+        ds, de = parse_french_date("")
+        assert ds is None and de is None
+
+
+class TestIsFutureDate:
+    def test_future(self):
+        assert is_future_date("2099-01-01") is True
+
+    def test_past(self):
+        assert is_future_date("2000-01-01") is False
+
+    def test_invalid(self):
+        assert is_future_date("foo") is False
+
+    def test_today_tolerated(self):
+        from datetime import date
+        assert is_future_date(date.today().isoformat()) is True

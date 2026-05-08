@@ -14,7 +14,20 @@ STOPWORDS = {
     "épreuve", "epreuve",
 }
 
-MOIS_FR = {}  # à remplir
+MOIS_FR = {
+    "janvier": 1, "février": 2, "fevrier": 2, "mars": 3, "avril": 4,
+    "mai": 5, "juin": 6, "juillet": 7, "août": 8, "aout": 8,
+    "septembre": 9, "octobre": 10, "novembre": 11,
+    "décembre": 12, "decembre": 12,
+}
+
+RE_DATE_FR_RANGE = re.compile(
+    r"(?:du\s+)?(\d{1,2})\s+(?:au\s+(\d{1,2})\s+)?"
+    r"(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)"
+    r"\s+(\d{4})",
+    re.IGNORECASE,
+)
+RE_DATE_NUM = re.compile(r"\b(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})\b")
 
 
 def normalize_text(text: str) -> str:
@@ -42,11 +55,36 @@ def jaccard(a: set, b: set) -> float:
 
 
 def parse_french_date(text: str):
-    ...
+    """Returns (date_start, date_end) tuple, both YYYY-MM-DD or (None, None)."""
+    if not text:
+        return None, None
+    text_lower = text.lower()
+    m = RE_DATE_FR_RANGE.search(text_lower)
+    if m:
+        d1, d2, mois_name, annee = m.group(1), m.group(2), m.group(3), m.group(4)
+        if mois_name not in MOIS_FR:
+            return None, None
+        mois = MOIS_FR[mois_name]
+        date_start = f"{annee}-{mois:02d}-{int(d1):02d}"
+        date_end = f"{annee}-{mois:02d}-{int(d2):02d}" if d2 else None
+        return date_start, date_end
+    m = RE_DATE_NUM.search(text_lower)
+    if m:
+        d, mois, annee = m.group(1), m.group(2), m.group(3)
+        try:
+            return f"{annee}-{int(mois):02d}-{int(d):02d}", None
+        except ValueError:
+            return None, None
+    return None, None
 
 
 def is_future_date(date_str: str, tolerate_today: bool = True) -> bool:
-    ...
+    try:
+        d = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return False
+    today = datetime.now().date()
+    return d >= today if tolerate_today else d > today
 
 
 def find_duplicate(sb, candidate_row: dict, similarity_threshold: float = 0.5):
