@@ -6,7 +6,14 @@ import logging
 
 log = logging.getLogger(__name__)
 
-STOPWORDS = set()  # à remplir
+STOPWORDS = {
+    "de", "du", "des", "le", "la", "les", "un", "une", "et", "à", "au", "aux",
+    "en", "sur", "pour", "par", "dans", "ski", "nordique", "stade", "tuffes",
+    "prémanon", "premanon", "france", "jura", "edition", "édition",
+    "competition", "compétition", "course", "open", "challenge", "tour",
+    "épreuve", "epreuve",
+}
+
 MOIS_FR = {}  # à remplir
 
 
@@ -21,11 +28,17 @@ def normalize_text(text: str) -> str:
 
 
 def signature_tokens(title: str) -> set:
-    ...
+    norm = normalize_text(title)
+    tokens = norm.split()
+    return {t for t in tokens if len(t) >= 3 and t not in STOPWORDS}
 
 
 def jaccard(a: set, b: set) -> float:
-    ...
+    if not a and not b:
+        return 1.0
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
 
 
 def parse_french_date(text: str):
