@@ -617,6 +617,41 @@
     }
     .btn-voir-plus:hover { border-color: var(--text); color: var(--text); }
 
+    /* ---- INTRO SEO ---- */
+    .intro-seo {
+      padding: 36px 32px 8px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .intro-seo h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-weight: 400;
+      font-size: 26px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+    .intro-seo p {
+      font-family: 'Barlow', sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--frost);
+    }
+    .intro-seo p + p { margin-top: 10px; }
+    .intro-seo a {
+      color: var(--frost);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(184,217,245,0.35);
+      transition: color .15s, border-color .15s;
+    }
+    .intro-seo a:hover { color: var(--text); border-color: var(--text); }
+    @media (max-width: 640px) {
+      .intro-seo { padding: 24px 16px 4px; }
+      .intro-seo h2 { font-size: 22px; }
+      .intro-seo p { font-size: 13px; }
+    }
+
     /* form-submit used in mod modal */
     .form-submit {
       font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
@@ -699,6 +734,17 @@
     <p class="hero-sub">Calendrier des compétitions · Prémanon, Jura · Alt. 1020 m</p>
   </div>
 </div>
+
+<!-- INTRO SEO -->
+<section class="intro-seo" aria-labelledby="intro-seo-title">
+  <h2 id="intro-seo-title">Le Stade Nordique des Tuffes</h2>
+  <p>
+    Situé à <strong>Prémanon</strong>, dans le <strong>Haut-Jura</strong> (39220), le <strong>Stade Nordique des Tuffes</strong> — officiellement <em>Stade Jason Lamy-Chappuis</em> — est l'un des principaux sites français dédiés aux sports nordiques. Il accueille quatre disciplines olympiques : <strong>biathlon</strong>, <strong>ski de fond</strong>, <strong>combiné nordique</strong> et <strong>saut à ski</strong>. Adossé au Centre National de Ski Nordique et de Moyenne Montagne (CNSNMM), il sert de site d'entraînement aux athlètes de l'équipe de France et reçoit régulièrement des compétitions nationales et internationales.
+  </p>
+  <p>
+    <em>stadedestuffes.fr est un agrégateur indépendant et non officiel</em>, conçu pour rassembler en un seul endroit calendrier des compétitions, actualités et informations pratiques. Pour toute confirmation officielle, consultez les organisateurs et le <a href="https://www.ensm.sports.gouv.fr/stade-nordique-des-tuffes-cnsnmm/" target="_blank" rel="noopener">site du CNSNMM</a>.
+  </p>
+</section>
 
 <!-- CALENDRIER -->
 <div class="section">
