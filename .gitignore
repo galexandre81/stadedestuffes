@@ -1,0 +1,21 @@
+# Logs et outputs locaux
+scraper_output.log
+*.log
+
+# Artefacts dev locaux (pas en prod)
+parse_ffs_local.py
+test_scraper.py
+
+# Claude Code
+.claude/
+
+# Snapshots de tests
+tests/snapshots/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Backups
+*.bak
