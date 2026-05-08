@@ -88,12 +88,74 @@ def is_future_date(date_str: str, tolerate_today: bool = True) -> bool:
 
 
 def find_duplicate(sb, candidate_row: dict, similarity_threshold: float = 0.5):
-    ...
+    try:
+        d = datetime.strptime(candidate_row["date_start"], "%Y-%m-%d").date()
+    except (ValueError, KeyError, TypeError):
+        return None
+    d_min = (d - timedelta(days=1)).isoformat()
+    d_max = (d + timedelta(days=1)).isoformat()
+    try:
+        result = sb.table("events").select(
+            "id, title, date_start, date_end, source_name, source_url, "
+            "notes, has_catering, public_access, sport, additional_sources, status"
+        ).gte("date_start", d_min).lte("date_start", d_max).execute()
+    except Exception as exc:
+        log.warning("dedup: erreur lecture events : %s", exc)
+        return None
+    if not result.data:
+        return None
+    candidate_tokens = signature_tokens(candidate_row.get("title", ""))
+    if not candidate_tokens:
+        return None
+    best_match, best_score = None, 0.0
+    for existing in result.data:
+        existing_tokens = signature_tokens(existing.get("title", ""))
+        score = jaccard(candidate_tokens, existing_tokens)
+        if score > best_score:
+            best_score = score
+            best_match = existing
+    return best_match if best_score >= similarity_threshold else None
 
 
 def merge_into_existing(sb, existing: dict, new_row: dict) -> bool:
-    ...
+    updates = {}
+    new_source_name = new_row.get("source_name")
+    new_source_url = new_row.get("source_url")
+    existing_main_source = existing.get("source_name")
+    existing_extras = existing.get("additional_sources") or []
+    already_listed = (
+        new_source_name == existing_main_source
+        or any(s.get("source_name") == new_source_name for s in existing_extras)
+    )
+    if new_source_name and not already_listed:
+        updates["additional_sources"] = existing_extras + [
+            {"source_name": new_source_name, "source_url": new_source_url}
+        ]
+    for field in ("notes", "has_catering", "public_access", "date_end"):
+        if existing.get(field) in (None, "") and new_row.get(field) not in (None, ""):
+            updates[field] = new_row[field]
+    if not updates:
+        return False
+    try:
+        sb.table("events").update(updates).eq("id", existing["id"]).execute()
+        log.info("   ⤴ enrichi event #%s avec %d champs depuis '%s'",
+                 existing["id"], len(updates), new_source_name)
+        return True
+    except Exception as exc:
+        log.error("   ✗ enrichissement échoué pour event #%s : %s", existing["id"], exc)
+        return False
 
 
 def upsert_event(sb, row: dict) -> str:
-    ...
+    """Returns 'added', 'merged', 'unchanged' or 'error'."""
+    try:
+        existing = find_duplicate(sb, row)
+        if existing:
+            changed = merge_into_existing(sb, existing, row)
+            return "merged" if changed else "unchanged"
+        sb.table("events").insert(row).execute()
+        return "added"
+    except Exception as exc:
+        log.error("   ✗ upsert event ÉCHOUÉ pour '%s' : %s",
+                  row.get("title", "?")[:60], exc)
+        return "error"
