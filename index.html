@@ -1214,11 +1214,57 @@ async function loadEvents() {
     if (error) throw error;
     allEvents = data || [];
     applyFilter(activeFilter);
+    injectAllEventsJsonLd(allEvents);
   } catch (err) {
     document.getElementById('events-grid').innerHTML =
       '<div class="state-msg">Impossible de charger les événements. Réessayez plus tard.</div>';
     document.getElementById('event-count').textContent = '';
   }
+}
+
+// ================================================================
+// SEO — JSON-LD SportsEvent injection
+// ================================================================
+function injectEventJsonLd(event) {
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "SportsEvent",
+    "name": event.title,
+    "startDate": event.date_start,
+    "endDate": event.date_end || event.date_start,
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "location": {
+      "@type": "Place",
+      "name": "Stade Nordique des Tuffes",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Prémanon",
+        "postalCode": "39220",
+        "addressRegion": "Jura",
+        "addressCountry": "FR"
+      }
+    },
+    "sport": event.sport || "Sports nordiques",
+    "url": `https://stadedestuffes.fr/#event-${event.id}`
+  };
+  const s = document.createElement("script");
+  s.type = "application/ld+json";
+  s.textContent = JSON.stringify(ld);
+  document.head.appendChild(s);
+}
+
+function injectAllEventsJsonLd(events) {
+  if (!Array.isArray(events) || !events.length) return;
+  // Filter out events without title/date or clearly past (> 30 days old)
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  events.forEach(ev => {
+    if (!ev || !ev.title || !ev.date_start) return;
+    const start = parseDate(ev.date_start);
+    if (!start || start < cutoff) return;
+    injectEventJsonLd(ev);
+  });
 }
 
 function applyFilter(filter) {
