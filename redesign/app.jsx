@@ -394,6 +394,21 @@ function App() {
           ))}
         </div>
         <Events events={events} filter={filter} onSelect={setSelected} />
+
+        <div className="cta-annoncer">
+          <div className="cta-annoncer-content">
+            <div className="cta-annoncer-eyebrow">Contribuer · Communauté</div>
+            <h3 className="cta-annoncer-title">Une compétition <em>manquante</em> ?</h3>
+            <p>
+              Vous organisez un événement aux Tuffes — course, stage, démo, animation — ou
+              vous en repérez un qui n'apparaît pas dans le calendrier ? Soumettez-le en
+              une minute. Examen avant publication.
+            </p>
+          </div>
+          <button className="cta-annoncer-btn" onClick={() => setSubmitOpen(true)}>
+            Annoncer un événement →
+          </button>
+        </div>
       </section>
 
       <NewsSection articles={articles} />

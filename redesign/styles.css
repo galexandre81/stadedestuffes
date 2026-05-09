@@ -381,6 +381,66 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .articles-grid .news-item h3 { font-size: 21px; }
 
+/* ============= CTA ANNONCER UN ÉVÉNEMENT ============= */
+.cta-annoncer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 48px;
+  align-items: center;
+  margin-top: 56px;
+  padding: 40px 0;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+.cta-annoncer-eyebrow {
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.cta-annoncer-title {
+  font-family: var(--display);
+  font-size: clamp(36px, 4.2vw, 56px);
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: var(--text);
+  font-weight: 400;
+  margin-bottom: 14px;
+  letter-spacing: 0;
+}
+.cta-annoncer-title em { font-style: normal; color: var(--accent); }
+.cta-annoncer p {
+  font-family: var(--sans);
+  font-size: 15px;
+  color: var(--text-2);
+  line-height: 1.6;
+  font-weight: 300;
+  max-width: 560px;
+}
+.cta-annoncer-btn {
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--accent);
+  padding: 16px 28px;
+  border: 0;
+  cursor: pointer;
+  transition: background .15s, transform .15s;
+  white-space: nowrap;
+}
+.cta-annoncer-btn:hover { background: var(--accent-2); transform: translateX(2px); }
+
+@media (max-width: 640px) {
+  .cta-annoncer { grid-template-columns: 1fr; gap: 20px; padding: 32px 0; }
+  .cta-annoncer-btn { align-self: flex-start; }
+}
+
 /* ============= FORM (submit modal + admin) ============= */
 .submit-modal { max-width: 620px; }
 .submit-body { padding: 40px 48px 40px; position: relative; }
