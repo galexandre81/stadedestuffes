@@ -26,10 +26,11 @@ function fmtRange(ev) {
 
 function LoginPanel() {
   const [email, setEmail] = useState('');
-  const [state, setState] = useState('idle'); // idle | sending | sent | error
+  const [code, setCode] = useState('');
+  const [state, setState] = useState('idle'); // idle | sending | sent | verifying | error
   const [error, setError] = useState('');
 
-  async function send(e) {
+  async function sendLink(e) {
     e.preventDefault();
     if (!email.trim()) return;
     setState('sending');
@@ -38,8 +39,29 @@ function LoginPanel() {
       email: email.trim(),
       options: { emailRedirectTo: window.location.href.split('#')[0] },
     });
-    if (err) { setError(err.message); setState('error'); }
-    else setState('sent');
+    if (err) {
+      setError(err.message);
+      setState('error');
+    } else {
+      setState('sent');
+    }
+  }
+
+  async function verifyCode(e) {
+    e.preventDefault();
+    if (!email.trim() || !code.trim()) return;
+    setState('verifying');
+    setError('');
+    const { error: err } = await sb.auth.verifyOtp({
+      email: email.trim(),
+      token: code.trim(),
+      type: 'email',
+    });
+    if (err) {
+      setError(err.message);
+      setState('sent'); // back to sent state so they can retry
+    }
+    // success: onAuthStateChange in AdminApp picks up the new session
   }
 
   return (
@@ -48,16 +70,35 @@ function LoginPanel() {
         <div className="page-hero-eyebrow">Espace privé · Stade des Tuffes</div>
         <h1 className="admin-login-title">Connexion <em>admin</em></h1>
         <p style={{ fontFamily: 'var(--sans)', fontSize: 14, color: 'var(--text-2)', marginBottom: 24, fontWeight: 300 }}>
-          Entrez votre email. Vous recevrez un lien de connexion sécurisé (pas de mot de passe à retenir).
+          Entrez votre email. Vous recevrez un mail contenant un lien magique <strong>et</strong> un code à 6 chiffres — utilisez l'un ou l'autre.
         </p>
 
-        {state === 'sent' ? (
-          <div className="admin-login-success">
-            <strong>Email envoyé !</strong> Cliquez sur le lien reçu sur <em>{email}</em> pour vous connecter.
-            Pensez à vérifier vos spams.
-          </div>
+        {state === 'sent' || state === 'verifying' ? (
+          <>
+            <div className="admin-login-success">
+              <strong>Email envoyé !</strong> Sur <em>{email}</em>. Vérifiez aussi vos spams.
+            </div>
+
+            <form onSubmit={verifyCode} className="admin-login-form" style={{ marginTop: 20 }}>
+              <label style={{ fontFamily: 'var(--cond)', fontSize: 11, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+                Code à 6 chiffres
+              </label>
+              <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength="6"
+                value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="123456" autoFocus
+                style={{ letterSpacing: '0.3em', fontSize: 18, textAlign: 'center', fontFamily: 'var(--mono)' }} />
+              <button type="submit" className="sponsor-cta" disabled={state === 'verifying' || code.length < 6}>
+                {state === 'verifying' ? 'Vérification…' : 'Valider le code →'}
+              </button>
+              {error && <div className="fld-error">{error}</div>}
+            </form>
+
+            <p style={{ marginTop: 16, fontFamily: 'var(--sans)', fontSize: 12.5, color: 'var(--muted)', fontWeight: 300 }}>
+              Le lien magique fonctionne aussi : clique-le directement dans le mail. Le code reste valable ~1h.
+            </p>
+          </>
         ) : (
-          <form onSubmit={send} className="admin-login-form">
+          <form onSubmit={sendLink} className="admin-login-form">
             <input type="email" value={email} onChange={e => setEmail(e.target.value)}
               placeholder="votre@email.fr" required autoFocus />
             <button type="submit" className="sponsor-cta" disabled={state === 'sending'}>
@@ -66,6 +107,7 @@ function LoginPanel() {
             {error && <div className="fld-error">{error}</div>}
           </form>
         )}
+
         <p style={{ marginTop: 24, fontFamily: 'var(--cond)', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>
           <a href="index.html" style={{ borderBottom: '1px solid var(--line)' }}>← Retour au site</a>
         </p>
