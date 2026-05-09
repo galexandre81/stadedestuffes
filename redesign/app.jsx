@@ -239,19 +239,24 @@ function Sponsor() {
   return (
     <section className="sponsor">
       <div className="sponsor-photo sponsor-logo-frame">
-        <img src="photos/cinqcibles-logo.jpeg" alt="Cinq Cibles — marque française dédiée aux fans de biathlon" className="sponsor-logo-img" />
+        <img src="photos/cinqcibles-logo.jpeg" alt="Cinq Cibles — la marque lifestyle du biathlon" className="sponsor-logo-img" />
         <span className="ad-stamp">Partenaire</span>
       </div>
       <div className="sponsor-content">
         <div className="sponsor-eyebrow">Cinq Cibles · Partenaire de la saison</div>
-        <h2 className="sponsor-title">La marque des fans de <em>biathlon</em>.</h2>
-        <p className="sponsor-deck">Vêtements, accessoires et objets pensés pour celles et ceux qui vivent ce sport intensément. Chaque achat finance directement les athlètes français.</p>
+        <h2 className="sponsor-title">La marque <em>lifestyle</em> du biathlon.</h2>
+        <p className="sponsor-deck">
+          T-shirts, sweats, accessoires et collections en collaboration directe avec des athlètes —
+          pensés pour celles et ceux qui vivent ce sport intensément. Une partie des ventes
+          alimente un fonds qui soutient les clubs et les athlètes du biathlon :
+          en achetant, tu deviens leur sponsor.
+        </p>
         <div className="sponsor-pillars">
-          <div className="sponsor-pillar"><span className="num">100 %</span><span className="lbl">des bénéfices reversés aux athlètes</span></div>
-          <div className="sponsor-pillar"><span className="num">42</span><span className="lbl">athlètes français soutenus</span></div>
-          <div className="sponsor-pillar"><span className="num">Made</span><span className="lbl">en France · circuit court</span></div>
+          <div className="sponsor-pillar"><span className="num">800 m</span><span className="lbl">du pas de tir des Rousses</span></div>
+          <div className="sponsor-pillar"><span className="num">Brodé</span><span className="lbl">à Prémanon, Haute-Jura</span></div>
+          <div className="sponsor-pillar"><span className="num">Sur commande</span><span className="lbl">slow fashion · zéro surstock</span></div>
         </div>
-        <a className="sponsor-cta" href="#">Découvrir la boutique →</a>
+        <a className="sponsor-cta" href="https://www.cinqcibles.fr" target="_blank" rel="noopener">Découvrir la boutique →</a>
       </div>
     </section>
   );
