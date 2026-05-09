@@ -252,8 +252,8 @@ function Sponsor() {
           en achetant, tu deviens leur sponsor.
         </p>
         <div className="sponsor-pillars">
-          <div className="sponsor-pillar"><span className="num">800 m</span><span className="lbl">du pas de tir des Rousses</span></div>
-          <div className="sponsor-pillar"><span className="num">Brodé</span><span className="lbl">à Prémanon, Haute-Jura</span></div>
+          <div className="sponsor-pillar"><span className="num">Brodé</span><span className="lbl">à 800 m du pas de tir du stade des Tuffes, Prémanon</span></div>
+          <div className="sponsor-pillar"><span className="num">Créé</span><span className="lbl">aux Rousses, Jura</span></div>
           <div className="sponsor-pillar"><span className="num">Sur commande</span><span className="lbl">slow fashion · zéro surstock</span></div>
         </div>
         <a className="sponsor-cta" href="https://www.cinqcibles.fr" target="_blank" rel="noopener">Découvrir la boutique →</a>
