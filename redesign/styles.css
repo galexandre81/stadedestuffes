@@ -231,7 +231,7 @@ iframe { border: 0; }
 .modal-photo { aspect-ratio: 16 / 10; background: var(--photo-tint); position: relative; overflow: hidden; }
 .modal-photo .placeholder { position: absolute; inset: 0; background-image: repeating-linear-gradient(135deg, transparent 0, transparent 18px, currentColor 18px, currentColor 19px); color: var(--muted-2); opacity: 0.18; }
 .modal-photo .ph-label { position: absolute; left: 16px; bottom: 16px; font-family: var(--mono); font-size: 10.5px; color: var(--text-2); background: var(--bg-2); padding: 5px 9px; border: 1px solid var(--line-soft); }
-.modal-close { position: absolute; right: 16px; top: 16px; width: 36px; height: 36px; background: var(--bg-2); border-radius: 50%; display: grid; place-items: center; color: var(--text); cursor: pointer; transition: background .15s; }
+.modal-close { position: absolute; right: 16px; top: 16px; z-index: 10; width: 36px; height: 36px; background: var(--bg-2); border-radius: 50%; display: grid; place-items: center; color: var(--text); cursor: pointer; transition: background .15s; }
 .modal-close:hover { background: var(--accent); color: white; }
 .modal-body { padding: 40px 48px 48px; }
 .modal-eyebrow { font-family: var(--cond); font-size: 11.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 12px; }

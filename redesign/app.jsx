@@ -293,9 +293,21 @@ function Footer() {
           <li>Para-nordique</li>
         </ul></div>
         <div className="footer-col"><h5>Contribuer</h5><ul>
-          <li><a href="#annoncer" onClick={(e) => { e.preventDefault(); window.openSubmitEvent(); }}>Annoncer un événement</a></li>
-          <li><a href="#contact" onClick={(e) => { e.preventDefault(); window.openContact('Signalement d\'erreur'); }}>Signaler une erreur</a></li>
-          <li><a href="#contact" onClick={(e) => { e.preventDefault(); window.openContact('Devenir partenaire'); }}>Devenir partenaire</a></li>
+          <li><a href="#annoncer" onClick={(e) => {
+            e.preventDefault();
+            if (typeof window.openSubmitEvent === 'function') window.openSubmitEvent();
+            else { console.error('[Tuffes] submit-event.js non chargé'); alert('Le formulaire n\'est pas disponible. Réessayez dans quelques secondes.'); }
+          }}>Annoncer un événement</a></li>
+          <li><a href="#contact" onClick={(e) => {
+            e.preventDefault();
+            if (typeof window.openContact === 'function') window.openContact('Signalement d\'erreur');
+            else { console.error('[Tuffes] contact.js non chargé — impossible d\'ouvrir le modal'); alert('Le formulaire de contact n\'est pas disponible. Réessayez dans quelques secondes ou écrivez à cinqcibles@gmail.com'); }
+          }}>Signaler une erreur</a></li>
+          <li><a href="#contact" onClick={(e) => {
+            e.preventDefault();
+            if (typeof window.openContact === 'function') window.openContact('Devenir partenaire');
+            else { console.error('[Tuffes] contact.js non chargé'); alert('Le formulaire de contact n\'est pas disponible. Réessayez ou écrivez à cinqcibles@gmail.com'); }
+          }}>Devenir partenaire</a></li>
         </ul></div>
       </div>
       <div className="footer-bottom">
