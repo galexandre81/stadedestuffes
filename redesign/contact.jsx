@@ -25,7 +25,6 @@ function ContactModal() {
       setOpen(true);
     };
     window.addEventListener('open-contact', handler);
-    window.openContact = (subj) => window.dispatchEvent(new CustomEvent('open-contact', { detail: { subject: subj } }));
     return () => window.removeEventListener('open-contact', handler);
   }, []);
 
@@ -67,9 +66,9 @@ function ContactModal() {
   if (!open) return null;
 
   return (
-    <div className="overlay open" onClick={() => setOpen(false)}>
+    <div className="overlay open" onClick={() => setOpen(false)} role="dialog" aria-modal="true" aria-label="Nous écrire">
       <div className="modal submit-modal" onClick={e => e.stopPropagation()}>
-        <button className="modal-close submit-close" onClick={() => setOpen(false)} aria-label="Fermer">×</button>
+        <button type="button" className="modal-close submit-close" onClick={() => setOpen(false)} aria-label="Fermer">×</button>
         <div className="submit-body">
           {state === 'success' ? (
             <>
@@ -123,6 +122,9 @@ function ContactModal() {
     </div>
   );
 }
+
+// Expose the global trigger BEFORE mounting so early clicks can't TypeError.
+window.openContact = (subj) => window.dispatchEvent(new CustomEvent('open-contact', { detail: { subject: subj } }));
 
 // Mount on its own root so it works on every page that loads this script.
 const contactRoot = document.createElement('div');

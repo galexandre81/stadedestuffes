@@ -54,10 +54,10 @@ function MentionsPage() {
 
         <h2>Cookies</h2>
         <p>
-          Le site utilise un service d'analyse d'audience (Google Analytics) en mode
-          anonymisé, sans collecte d'identifiants personnels. Aucun cookie publicitaire
-          n'est déposé. Vous pouvez désactiver les cookies dans les réglages de votre
-          navigateur.
+          Le site n'utilise aucun cookie de mesure d'audience ni de cookie publicitaire.
+          Le seul stockage local est celui de la préférence de thème (clair/sombre),
+          conservée dans le <code>localStorage</code> de votre navigateur. Vous pouvez
+          le supprimer à tout moment depuis les réglages du navigateur.
         </p>
 
         <h2>Propriété intellectuelle</h2>

@@ -62,6 +62,7 @@ window.Footer = function () {
         <div className="footer-col"><h5>Contribuer</h5><ul>
           <li><a href="#annoncer" onClick={(e) => { e.preventDefault(); if (window.openSubmitEvent) window.openSubmitEvent(); else window.location.href = 'index.html#annoncer'; }}>Annoncer un événement</a></li>
           <li><a href="#contact" onClick={(e) => { e.preventDefault(); window.openContact('Signalement d\'erreur'); }}>Signaler une erreur</a></li>
+          <li><a href="#contact" onClick={(e) => { e.preventDefault(); window.openContact('Devenir partenaire'); }}>Devenir partenaire</a></li>
           <li><a href="mentions-legales.html">Mentions légales</a></li>
         </ul></div>
       </div>

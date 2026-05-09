@@ -17,9 +17,10 @@ function articleMatchesDiscipline(a, key) {
 }
 
 function ArticleCard({ a }) {
-  const href = a.url || '#';
+  const Tag = a.url ? 'a' : 'div';
+  const linkProps = a.url ? { href: a.url, target: '_blank', rel: 'noopener noreferrer' } : {};
   return (
-    <a className={'news-item' + (a.image_url ? '' : ' no-photo')} href={href} target={a.url ? '_blank' : undefined} rel="noopener">
+    <Tag className={'news-item' + (a.image_url ? '' : ' no-photo')} {...linkProps}>
       {a.image_url && (
         <div className="thumb has-photo">
           <img src={a.image_url} alt="" className="photo-img" />
@@ -33,17 +34,19 @@ function ArticleCard({ a }) {
       </div>
       <h3>{a.title}</h3>
       <p>{a.summary}</p>
-    </a>
+    </Tag>
   );
 }
 
 function ArticlesPage() {
   const [, forceRender] = React.useReducer(x => x + 1, 0);
   React.useEffect(() => {
-    if (!window.STT_LOADING) return;
     const handler = () => forceRender();
-    window.addEventListener('stt-data-ready', handler);
-    return () => window.removeEventListener('stt-data-ready', handler);
+    if (window.STT_LOADING) {
+      window.addEventListener('stt-data-ready', handler);
+      return () => window.removeEventListener('stt-data-ready', handler);
+    }
+    forceRender();
   }, []);
 
   const articles = window.STT_ARTICLES || [];

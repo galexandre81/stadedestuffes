@@ -161,7 +161,12 @@ function Events({ events, filter, onSelect }) {
       </div>
       {past.length > 0 && (
         <>
-          <button className={'past-toggle' + (openPast ? ' open' : '')} onClick={() => setOpenPast(o => !o)}>
+          <button
+            type="button"
+            className={'past-toggle' + (openPast ? ' open' : '')}
+            onClick={() => setOpenPast(o => !o)}
+            aria-expanded={openPast}
+          >
             <span>Compétitions passées · {past.length}</span>
             <span className="chevron">⌄</span>
           </button>
@@ -190,22 +195,26 @@ function NewsSection({ articles }) {
         </div>
       </div>
       <div className="news-grid">
-        {visible.map((a) => (
-          <a key={a.id} className={'news-item' + (a.image_url ? '' : ' no-photo')} href={a.url || '#'} target={a.url ? '_blank' : undefined} rel="noopener">
-            {a.image_url && (
-              <div className="thumb has-photo">
-                <img src={a.image_url} alt="" className="photo-img" />
+        {visible.map((a) => {
+          const Tag = a.url ? 'a' : 'div';
+          const linkProps = a.url ? { href: a.url, target: '_blank', rel: 'noopener noreferrer' } : {};
+          return (
+            <Tag key={a.id} className={'news-item' + (a.image_url ? '' : ' no-photo')} {...linkProps}>
+              {a.image_url && (
+                <div className="thumb has-photo">
+                  <img src={a.image_url} alt="" className="photo-img" />
+                </div>
+              )}
+              <div className="meta">
+                <span className="source">{a.source_name}</span>
+                <span>·</span>
+                <span>{fmtArticleDate(a.published_at)}</span>
               </div>
-            )}
-            <div className="meta">
-              <span className="source">{a.source_name}</span>
-              <span>·</span>
-              <span>{fmtArticleDate(a.published_at)}</span>
-            </div>
-            <h3>{a.title}</h3>
-            <p>{a.summary}</p>
-          </a>
-        ))}
+              <h3>{a.title}</h3>
+              <p>{a.summary}</p>
+            </Tag>
+          );
+        })}
       </div>
       <div className="news-link">
         <a href="articles.html">Voir toutes les actualités →</a>
@@ -353,10 +362,13 @@ function App() {
   }, [tweaks.theme]);
 
   useEffect(() => {
-    if (!window.STT_LOADING) return;
     const handler = () => forceRender();
-    window.addEventListener('stt-data-ready', handler);
-    return () => window.removeEventListener('stt-data-ready', handler);
+    if (window.STT_LOADING) {
+      window.addEventListener('stt-data-ready', handler);
+      return () => window.removeEventListener('stt-data-ready', handler);
+    }
+    // Data already arrived before this effect ran — force a render to read it.
+    forceRender();
   }, []);
 
   // Ouvre le modal de soumission si l'URL est /#annoncer (depuis n'importe quelle page)
@@ -403,6 +415,11 @@ function App() {
             <button key={s.key} className={'filter-btn' + (filter === s.key ? ' active' : '')} onClick={() => setFilter(s.key)}>{s.label}</button>
           ))}
         </div>
+        {window.STT_ERROR && (
+          <div className="fld-error" style={{ marginBottom: 24 }}>
+            Impossible de charger les événements depuis Supabase ({window.STT_ERROR}). Réessayez en rechargeant la page.
+          </div>
+        )}
         <Events events={events} filter={filter} onSelect={setSelected} />
 
         <div className="cta-annoncer">

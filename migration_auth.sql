@@ -72,9 +72,16 @@ CREATE POLICY "events_read" ON public.events FOR SELECT
     OR public.user_role() IN ('admin', 'publisher')
   );
 
--- Insertion anon : seulement en pending
+-- Insertion anon : seulement en pending, source_name forcé, tailles capées
+-- (anti-impersonation + anti-DoS contre soumissions monstrueuses)
 CREATE POLICY "events_anon_insert_pending" ON public.events FOR INSERT TO anon
-  WITH CHECK (status = 'pending');
+  WITH CHECK (
+    status = 'pending'
+    AND (source_name IS NULL OR source_name = 'Communauté')
+    AND char_length(title) BETWEEN 3 AND 200
+    AND char_length(coalesce(notes, '')) <= 2000
+    AND char_length(coalesce(source_url, '')) <= 500
+  );
 
 -- Insertion authentifié : publisher/admin peuvent insérer en n'importe quel status
 CREATE POLICY "events_authenticated_insert" ON public.events FOR INSERT TO authenticated
@@ -88,6 +95,28 @@ CREATE POLICY "events_authenticated_update" ON public.events FOR UPDATE TO authe
 -- Delete : seul l'admin
 CREATE POLICY "events_admin_delete" ON public.events FOR DELETE TO authenticated
   USING (public.user_role() = 'admin');
+
+-- ============================================================
+-- 5. RLS sur press_articles (alimentée uniquement par les scrapers Python
+--    en service_role, jamais par anon — donc verrouillage total côté anon)
+-- ============================================================
+ALTER TABLE public.press_articles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "press_read" ON public.press_articles;
+DROP POLICY IF EXISTS "press_admin_write" ON public.press_articles;
+
+-- Lecture : anon voit les published, admin/publisher voient tout
+CREATE POLICY "press_read" ON public.press_articles FOR SELECT
+  USING (
+    status = 'published'
+    OR public.user_role() IN ('admin', 'publisher')
+  );
+
+-- Écriture : seul admin/publisher (les scrapers Python passent par service_role
+-- qui bypass RLS, donc pas besoin de policy pour eux)
+CREATE POLICY "press_admin_write" ON public.press_articles FOR ALL TO authenticated
+  USING (public.user_role() IN ('admin', 'publisher'))
+  WITH CHECK (public.user_role() IN ('admin', 'publisher'));
 
 -- ============================================================
 -- BOOTSTRAP : se créer un admin (à faire APRÈS s'être loggé une 1ère fois)

@@ -39,7 +39,6 @@ function SubmitEventModal() {
       setOpen(true);
     };
     window.addEventListener('open-submit-event', handler);
-    window.openSubmitEvent = () => window.dispatchEvent(new CustomEvent('open-submit-event'));
     return () => window.removeEventListener('open-submit-event', handler);
   }, []);
 
@@ -85,6 +84,9 @@ function SubmitEventModal() {
       });
       if (!supRes.ok) throw new Error(`Supabase HTTP ${supRes.status}`);
 
+      // Notification email — best-effort, mais on log si ça échoue pour
+      // pouvoir détecter une notif manquée. La soumission Supabase est OK
+      // de toute façon, donc l'admin verra l'événement dans /admin.html.
       fetch(`https://formsubmit.co/ajax/${cfg.FORMSUBMIT_EMAIL}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -101,7 +103,9 @@ function SubmitEventModal() {
           'Notes':         payload.notes || '—',
           'Email contact': form.email || '—',
         }),
-      }).catch(() => {});
+      })
+        .then((r) => { if (!r.ok) console.warn('FormSubmit notif HTTP', r.status, '— check admin.html pour la soumission brute'); })
+        .catch((e) => { console.warn('FormSubmit notif fetch failed:', e?.message, '— check admin.html pour la soumission brute'); });
 
       setState('success');
     } catch (err) {
@@ -111,9 +115,9 @@ function SubmitEventModal() {
   }
 
   return (
-    <div className="overlay open" onClick={close}>
+    <div className="overlay open" onClick={close} role="dialog" aria-modal="true" aria-label="Annoncer un événement">
       <div className="modal submit-modal" onClick={e => e.stopPropagation()}>
-        <button className="modal-close submit-close" onClick={close} aria-label="Fermer">×</button>
+        <button type="button" className="modal-close submit-close" onClick={close} aria-label="Fermer">×</button>
 
         <div className="submit-body">
           {state === 'success' ? (
@@ -209,6 +213,10 @@ function SubmitEventModal() {
     </div>
   );
 }
+
+// Expose the global trigger BEFORE mounting so any code that runs in the same
+// tick (e.g. an early click handler) can call it without a TypeError.
+window.openSubmitEvent = () => window.dispatchEvent(new CustomEvent('open-submit-event'));
 
 // Mount on its own root so it works on every page that loads this script.
 const submitRoot = document.createElement('div');
