@@ -41,6 +41,7 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html { overflow-x: clip; }
 html, body { background: var(--bg); color: var(--text); }
 body {
   font-family: var(--sans);
@@ -54,6 +55,13 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+/* Global responsive safety: nothing should ever exceed its container */
+img, video, iframe, canvas {
+  max-width: 100%;
+}
+img, video, iframe { display: block; }
+iframe { border: 0; }
 
 .disclaimer {
   font-family: var(--cond);
@@ -747,4 +755,75 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .footer { padding: 40px 20px 24px; }
   .footer-grid { grid-template-columns: 1fr; }
   .modal-body { padding: 28px 24px 32px; }
+
+  /* Allow long display titles to wrap mid-word so they never overflow */
+  .hero-title, .section-title, .page-hero-title, .modal-title,
+  .sponsor-title, .venir-text h2, .admin-login-title,
+  .cta-annoncer-title, .footer-brand h4 {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+  }
+  /* Tighter type ramps for small viewports */
+  .hero-title       { font-size: clamp(48px, 12vw, 80px); line-height: 0.92; }
+  .hero-next-date   { font-size: 32px; }
+  .section-title    { font-size: clamp(36px, 10vw, 56px); }
+  .page-hero-title  { font-size: clamp(40px, 11vw, 64px); }
+  .sponsor-title    { font-size: clamp(40px, 11vw, 64px); }
+  .modal-title      { font-size: 32px; }
+  .admin-login-title { font-size: 40px; }
+  .cta-annoncer-title { font-size: clamp(28px, 8vw, 40px); }
+
+  /* Sponsor pillars: stack on very narrow widths */
+  .sponsor-pillars { gap: 18px; }
+  .sponsor-pillar { min-width: 0; flex: 1 1 calc(50% - 18px); }
+  .sponsor-pillar .num { font-size: 32px; }
+
+  /* Section meta has a "right-aligned" feel that wastes space on mobile */
+  .section-meta { text-align: left; }
+
+  /* Google Maps iframe shorter on mobile */
+  iframe[title*="Google Maps"], iframe[title*="Maps"] { height: 280px; }
+
+  /* Hero next-event card is too cramped on tiny widths */
+  .hero-next-title { font-size: 17px; }
+
+  /* Modals: edge-to-edge with small padding */
+  .overlay { padding: 12px; }
+  .modal-photo { aspect-ratio: 4 / 3; }
+}
+
+/* Narrow phones (Galaxy S Mini, iPhone SE 1st gen) */
+@media (max-width: 420px) {
+  .nav { padding: 16px 16px; }
+  .disclaimer { padding: 8px 16px; font-size: 10.5px; letter-spacing: 0.1em; }
+  .hero { padding: 12px 16px 48px; }
+  .section { padding: 48px 16px; }
+  .venir { margin: 48px 16px 0; padding: 48px 0; }
+  .sponsor { padding: 20px 16px; }
+  .footer { padding: 32px 16px 20px; }
+  .longform { padding: 40px 16px 56px; }
+  .page-hero { padding: 24px 16px 20px; }
+
+  /* Even smaller display sizes */
+  .hero-title { font-size: 44px; }
+  .section-title { font-size: 36px; }
+  .page-hero-title { font-size: 40px; }
+  .sponsor-title { font-size: 40px; }
+  .modal-title { font-size: 28px; }
+
+  /* Sponsor pillars: full width stack */
+  .sponsor-pillar { flex: 1 1 100%; }
+
+  /* Event row: tighter date column */
+  .event-row { grid-template-columns: 76px 1fr; gap: 14px; }
+  .event-date { font-size: 17px; }
+
+  /* CTA button: take full width if alone */
+  .cta-annoncer-btn { width: 100%; text-align: center; }
+
+  /* Form modal narrower */
+  .submit-body { padding: 24px 18px 24px; }
+  .modal-body { padding: 24px 18px 28px; }
+  .modal-row { grid-template-columns: 1fr; gap: 4px; }
 }
