@@ -11,8 +11,9 @@ Version pré-compilée du site, prête pour la production. Source en JSX, build 
 | `/venir-aux-tuffes.html` | `venir.jsx` | `venir.js` |
 | `/a-propos.html` | `apropos.jsx` | `apropos.js` |
 | `/mentions-legales.html` | `mentions.jsx` | `mentions.js` |
+| `/admin.html` *(noindex)* | `admin.jsx` | `admin.js` |
 
-Partagés : `shell.jsx` (Disclaimer/Nav/Footer), `tweaks-panel.jsx` (no-op), `data.js` (Supabase à brancher), `styles.css`, `photos/`, `favicon.svg`.
+Partagés : `shell.jsx` (Disclaimer/Nav/Footer), `tweaks-panel.jsx` (no-op), `submit-event.jsx` (modal de soumission), `data.js` (Supabase fetch), `config.js` (clés), `styles.css`, `photos/`, `favicon.svg`.
 
 ## Workflow d'édition
 
@@ -51,41 +52,52 @@ Dans le repo GitHub → **Settings → Pages → Source** : choisir **« GitHub 
 
 Place le JPEG dans `redesign/photos/cinqcibles-logo.jpeg`. Référencé par `app.jsx` dans la section sponsor.
 
-### 3. Brancher Supabase (sinon le live affichera les données de démo)
+### 3. Appliquer la migration auth + RLS dans Supabase
 
-Édite `data.js` et remplace les arrays statiques par :
+Le fichier [`../migration_auth.sql`](../migration_auth.sql) à la racine du repo contient tout le SQL nécessaire pour activer l'authentification et les rôles (admin / publisher / guest).
 
-```js
-const SUPABASE_URL = "https://XXXX.supabase.co";   // récupère depuis l'ancien index.html
-const SUPABASE_ANON_KEY = "eyJ...";
+1. Va sur https://supabase.com/dashboard/project/arkbrvzacbereyukqfte/sql/new
+2. Copie-colle l'intégralité du contenu de `migration_auth.sql`
+3. Clique **Run**
+4. Vérifie qu'aucune erreur n'apparaît (les `DROP POLICY IF EXISTS` peuvent être no-op, c'est normal)
 
-window.STT_EVENTS = [];
-window.STT_ARTICLES = [];
+### 4. Bootstrap : se créer un admin
 
-(async () => {
-  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
-  const [evRes, artRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/events?status=eq.published&order=date_start.asc`, { headers }),
-    fetch(`${SUPABASE_URL}/rest/v1/press_articles?status=eq.published&order=published_at.desc&limit=24`, { headers }),
-  ]);
-  window.STT_EVENTS = await evRes.json();
-  window.STT_ARTICLES = await artRes.json();
-  window.dispatchEvent(new CustomEvent('stt-data-ready'));
-})();
-```
+Une fois la migration passée, suis cette séquence **dans l'ordre** :
 
-Puis dans `app.jsx` et `articles.jsx`, ajoute en haut du composant principal :
+1. Ouvre https://stadedestuffes.fr/admin.html
+2. Entre ton email (`cinqcibles@gmail.com`)
+3. Clique sur le lien magic link reçu par mail
+4. Tu te retrouves loggé mais en rôle `guest` → aucun droit (page « Compte en attente »)
+5. Reviens dans le SQL Editor de Supabase, exécute :
+   ```sql
+   UPDATE public.profiles SET role = 'admin'
+   WHERE id = (SELECT id FROM auth.users WHERE email = 'cinqcibles@gmail.com');
+   ```
+6. Recharge `admin.html` → tu as les droits complets
 
-```js
-const [, force] = React.useReducer(x => x + 1, 0);
-React.useEffect(() => {
-  const h = () => force();
-  window.addEventListener('stt-data-ready', h);
-  return () => window.removeEventListener('stt-data-ready', h);
-}, []);
-```
+### 5. Onboarder un utilisateur CNSNMM (rôle publisher = peut publier sans validation)
 
-### 4. Push
+**Option A — Le user s'inscrit lui-même** :
+1. Tu lui donnes l'URL `https://stadedestuffes.fr/admin.html`
+2. Il entre son email, clique le magic link, atterrit en `guest`
+3. Tu lui assignes le rôle `publisher` :
+   ```sql
+   UPDATE public.profiles SET role = 'publisher'
+   WHERE id = (SELECT id FROM auth.users WHERE email = 'leur@email.fr');
+   ```
+
+**Option B — Tu l'invites depuis Supabase** : Dashboard → Authentication → Users → Add user → Invite. Pareil ensuite pour le rôle.
+
+### 6. (Optionnel) Désactiver les inscriptions publiques
+
+Si tu veux que personne ne puisse demander un magic link sans être déjà invité :
+- Supabase Dashboard → Authentication → Providers → Email
+- Décoche **"Enable signups"** (ou "Allow new users to sign up")
+
+Ce n'est pas strictement nécessaire (les `guest` n'ont aucun droit de toute façon), mais ça évite que ta table `auth.users` se remplisse aléatoirement.
+
+### 7. Push
 
 ```
 git add redesign/ .github/
@@ -95,7 +107,7 @@ git push
 
 Le workflow se lance, compile, déploie. Vérifier dans l'onglet **Actions** sur GitHub.
 
-### 5. Archive l'ancien site (optionnel)
+### 8. Archive l'ancien site (optionnel)
 
 Les anciens fichiers à la racine (`index.html`, `articles.html`…) ne servent plus dès que GitHub Pages bascule sur Actions, mais tu peux les déplacer dans `legacy/` pour faire le ménage.
 

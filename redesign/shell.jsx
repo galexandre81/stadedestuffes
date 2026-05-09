@@ -59,10 +59,10 @@ window.Footer = function () {
           <li>À propos</li>
         </ul></div>
         <div className="footer-col"><h5>Disciplines</h5><ul><li>Biathlon</li><li>Ski de fond</li><li>Combiné nordique</li><li>Saut à ski</li><li>Para-nordique</li></ul></div>
-        <div className="footer-col"><h5>Légal</h5><ul>
+        <div className="footer-col"><h5>Contribuer</h5><ul>
+          <li><a href="index.html#annoncer">Annoncer un événement</a></li>
+          <li><a href="mailto:cinqcibles@gmail.com?subject=Signalement%20d'erreur">Signaler une erreur</a></li>
           <li><a href="mentions-legales.html">Mentions légales</a></li>
-          <li>Confidentialité</li>
-          <li>Contact</li>
         </ul></div>
       </div>
       <div className="footer-bottom">

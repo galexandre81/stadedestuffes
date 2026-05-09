@@ -4,7 +4,7 @@
   "private": true,
   "description": "Build pipeline for the stadedestuffes.fr redesign — pre-compiles JSX to JS so the site is SEO-friendly and fast.",
   "scripts": {
-    "build": "babel app.jsx articles.jsx venir.jsx mentions.jsx apropos.jsx shell.jsx tweaks-panel.jsx --out-dir . --out-file-extension .js"
+    "build": "babel app.jsx articles.jsx venir.jsx mentions.jsx apropos.jsx shell.jsx tweaks-panel.jsx submit-event.jsx admin.jsx --out-dir . --out-file-extension .js"
   },
   "devDependencies": {
     "@babel/cli": "^7.25.0",

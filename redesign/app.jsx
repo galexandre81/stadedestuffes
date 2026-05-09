@@ -267,7 +267,11 @@ function Footer() {
         </div>
         <div className="footer-col"><h5>Navigation</h5><ul><li>Calendrier</li><li>Actualités</li><li>Venir aux Tuffes</li><li>À propos</li></ul></div>
         <div className="footer-col"><h5>Disciplines</h5><ul><li>Biathlon</li><li>Ski de fond</li><li>Combiné nordique</li><li>Saut à ski</li><li>Para-nordique</li></ul></div>
-        <div className="footer-col"><h5>Contribuer</h5><ul><li>Annoncer un événement</li><li>Signaler une erreur</li><li>Devenir partenaire</li></ul></div>
+        <div className="footer-col"><h5>Contribuer</h5><ul>
+          <li><a href="#annoncer" onClick={(e) => { e.preventDefault(); setSubmitOpen(true); }}>Annoncer un événement</a></li>
+          <li><a href="mailto:cinqcibles@gmail.com?subject=Signalement%20d'erreur">Signaler une erreur</a></li>
+          <li><a href="mailto:cinqcibles@gmail.com?subject=Devenir%20partenaire">Devenir partenaire</a></li>
+        </ul></div>
       </div>
       <div className="footer-bottom">
         <span>© 2026 — Les Tuffes · Site indépendant</span>
@@ -326,6 +330,7 @@ function App() {
   const [tweaks, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(null);
+  const [submitOpen, setSubmitOpen] = useState(false);
   const [, forceRender] = React.useReducer(x => x + 1, 0);
 
   useEffect(() => {
@@ -337,6 +342,19 @@ function App() {
     const handler = () => forceRender();
     window.addEventListener('stt-data-ready', handler);
     return () => window.removeEventListener('stt-data-ready', handler);
+  }, []);
+
+  // Ouvre le modal de soumission si l'URL est /#annoncer (depuis n'importe quelle page)
+  useEffect(() => {
+    const checkHash = () => {
+      if (window.location.hash === '#annoncer') {
+        setSubmitOpen(true);
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
   }, []);
 
   const events = window.STT_EVENTS || [];
@@ -379,6 +397,7 @@ function App() {
       <Footer />
 
       <EventModal event={selected} onClose={() => setSelected(null)} />
+      <window.SubmitEventModal open={submitOpen} onClose={() => setSubmitOpen(false)} />
 
       <TweaksUI title="Tweaks">
         <window.TweakSection label="Apparence" />
