@@ -14,7 +14,7 @@ window.Disclaimer = function () {
   return (
     <div className="disclaimer">
       Site indépendant — sans lien avec le CNSNMM ou l'ENSM. Données agrégées depuis les sources publiques.&nbsp;
-      <a href="#">Site officiel</a>
+      <a href="https://cnsnmm.sports.gouv.fr/" target="_blank" rel="noopener">Site officiel</a>
     </div>
   );
 };
@@ -56,11 +56,11 @@ window.Footer = function () {
           <li><a href="index.html">Calendrier</a></li>
           <li><a href="articles.html">Actualités</a></li>
           <li><a href="venir-aux-tuffes.html">Venir aux Tuffes</a></li>
-          <li>À propos</li>
+          <li><a href="a-propos.html">À propos</a></li>
         </ul></div>
         <div className="footer-col"><h5>Disciplines</h5><ul><li>Biathlon</li><li>Ski de fond</li><li>Combiné nordique</li><li>Saut à ski</li><li>Para-nordique</li></ul></div>
         <div className="footer-col"><h5>Contribuer</h5><ul>
-          <li><a href="index.html#annoncer">Annoncer un événement</a></li>
+          <li><a href="#annoncer" onClick={(e) => { e.preventDefault(); if (window.openSubmitEvent) window.openSubmitEvent(); else window.location.href = 'index.html#annoncer'; }}>Annoncer un événement</a></li>
           <li><a href="#contact" onClick={(e) => { e.preventDefault(); window.openContact('Signalement d\'erreur'); }}>Signaler une erreur</a></li>
           <li><a href="mentions-legales.html">Mentions légales</a></li>
         </ul></div>

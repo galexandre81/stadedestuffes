@@ -1,7 +1,13 @@
-/* global React */
+/* global React, ReactDOM */
 // Modal "Annoncer un événement" — public form, anyone can submit.
-// Inserts into Supabase events table with status='pending'
-// (RLS enforces this), then sends a notification email via FormSubmit.
+// Self-mounting (own React root) + event bus pattern, so it works
+// from any page without prop drilling. Open via:
+//   window.openSubmitEvent()
+// or:
+//   window.dispatchEvent(new CustomEvent('open-submit-event'))
+//
+// Insert into Supabase events with status='pending' (RLS enforces this),
+// then sends a notification email via FormSubmit.
 
 const SPORT_OPTIONS = ['Ski de fond', 'Biathlon', 'Combiné nordique', 'Saut à ski', 'Para', 'Autre / Plusieurs'];
 
@@ -11,17 +17,18 @@ function radioToBool(v) {
   return null;
 }
 
-function SubmitEventModal({ open, onClose }) {
+function SubmitEventModal() {
+  const [open, setOpen] = React.useState(false);
   const [form, setForm] = React.useState({
     title: '', date_start: '', date_end: '', sport: '',
     public_access: '', has_catering: '', source_url: '', email: '', notes: '',
     honeypot: '',
   });
-  const [state, setState] = React.useState('idle'); // idle | sending | success | error
+  const [state, setState] = React.useState('idle');
   const [error, setError] = React.useState('');
 
   React.useEffect(() => {
-    if (!open) {
+    const handler = () => {
       setForm({
         title: '', date_start: '', date_end: '', sport: '',
         public_access: '', has_catering: '', source_url: '', email: '', notes: '',
@@ -29,11 +36,16 @@ function SubmitEventModal({ open, onClose }) {
       });
       setState('idle');
       setError('');
-    }
-  }, [open]);
+      setOpen(true);
+    };
+    window.addEventListener('open-submit-event', handler);
+    window.openSubmitEvent = () => window.dispatchEvent(new CustomEvent('open-submit-event'));
+    return () => window.removeEventListener('open-submit-event', handler);
+  }, []);
 
   if (!open) return null;
 
+  const close = () => setOpen(false);
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   async function submit(e) {
@@ -73,7 +85,6 @@ function SubmitEventModal({ open, onClose }) {
       });
       if (!supRes.ok) throw new Error(`Supabase HTTP ${supRes.status}`);
 
-      // Email de notif (best-effort, n'empêche pas le succès si ça échoue)
       fetch(`https://formsubmit.co/ajax/${cfg.FORMSUBMIT_EMAIL}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -100,9 +111,9 @@ function SubmitEventModal({ open, onClose }) {
   }
 
   return (
-    <div className="overlay open" onClick={onClose}>
+    <div className="overlay open" onClick={close}>
       <div className="modal submit-modal" onClick={e => e.stopPropagation()}>
-        <button className="modal-close submit-close" onClick={onClose} aria-label="Fermer">×</button>
+        <button className="modal-close submit-close" onClick={close} aria-label="Fermer">×</button>
 
         <div className="submit-body">
           {state === 'success' ? (
@@ -110,7 +121,7 @@ function SubmitEventModal({ open, onClose }) {
               <div className="modal-eyebrow">Merci !</div>
               <h3 className="modal-title">Proposition <em>envoyée</em></h3>
               <p>Votre événement a été ajouté à la file de validation. Il sera examiné rapidement avant publication.</p>
-              <button className="sponsor-cta" onClick={onClose} style={{ marginTop: 24, alignSelf: 'flex-start' }}>Fermer</button>
+              <button className="sponsor-cta" onClick={close} style={{ marginTop: 24, alignSelf: 'flex-start' }}>Fermer</button>
             </div>
           ) : (
             <form onSubmit={submit} noValidate>
@@ -186,7 +197,7 @@ function SubmitEventModal({ open, onClose }) {
               {error && <div className="fld-error">{error}</div>}
 
               <div className="fld-actions">
-                <button type="button" className="filter-btn" onClick={onClose}>Annuler</button>
+                <button type="button" className="filter-btn" onClick={close}>Annuler</button>
                 <button type="submit" className="sponsor-cta" disabled={state === 'sending'}>
                   {state === 'sending' ? 'Envoi…' : 'Envoyer →'}
                 </button>
@@ -199,4 +210,8 @@ function SubmitEventModal({ open, onClose }) {
   );
 }
 
-window.SubmitEventModal = SubmitEventModal;
+// Mount on its own root so it works on every page that loads this script.
+const submitRoot = document.createElement('div');
+submitRoot.id = 'submit-event-root';
+document.body.appendChild(submitRoot);
+ReactDOM.createRoot(submitRoot).render(<SubmitEventModal />);

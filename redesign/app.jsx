@@ -49,7 +49,7 @@ function Disclaimer() {
   return (
     <div className="disclaimer">
       Site indépendant — sans lien avec le CNSNMM ou l'ENSM. Données agrégées depuis les sources publiques.&nbsp;
-      <a href="#">Site officiel</a>
+      <a href="https://cnsnmm.sports.gouv.fr/" target="_blank" rel="noopener">Site officiel</a>
     </div>
   );
 }
@@ -81,7 +81,7 @@ function Nav({ theme, onToggleTheme }) {
   );
 }
 
-function Hero({ next }) {
+function Hero({ next, onSelect }) {
   return (
     <section className="hero">
       <div className="hero-photo has-photo">
@@ -107,7 +107,7 @@ function Hero({ next }) {
               {next.public_access === true && <span>· Public admis</span>}
               {next.has_catering === true && <span>· Restauration sur place</span>}
             </div>
-            <a className="hero-next-link">Voir les détails →</a>
+            <a className="hero-next-link" onClick={() => onSelect(next)} style={{ cursor: 'pointer' }}>Voir les détails →</a>
           </div>
         )}
       </div>
@@ -270,17 +270,28 @@ function Footer() {
           <h4>Les Tuffes</h4>
           <p>Site indépendant qui rassemble le calendrier des compétitions et la veille presse pour le stade nordique de Prémanon. Sans lien avec le CNSNMM ou l'ENSM.</p>
         </div>
-        <div className="footer-col"><h5>Navigation</h5><ul><li>Calendrier</li><li>Actualités</li><li>Venir aux Tuffes</li><li>À propos</li></ul></div>
-        <div className="footer-col"><h5>Disciplines</h5><ul><li>Biathlon</li><li>Ski de fond</li><li>Combiné nordique</li><li>Saut à ski</li><li>Para-nordique</li></ul></div>
+        <div className="footer-col"><h5>Navigation</h5><ul>
+          <li><a href="index.html">Calendrier</a></li>
+          <li><a href="articles.html">Actualités</a></li>
+          <li><a href="venir-aux-tuffes.html">Venir aux Tuffes</a></li>
+          <li><a href="a-propos.html">À propos</a></li>
+        </ul></div>
+        <div className="footer-col"><h5>Disciplines</h5><ul>
+          <li>Biathlon</li>
+          <li>Ski de fond</li>
+          <li>Combiné nordique</li>
+          <li>Saut à ski</li>
+          <li>Para-nordique</li>
+        </ul></div>
         <div className="footer-col"><h5>Contribuer</h5><ul>
-          <li><a href="#annoncer" onClick={(e) => { e.preventDefault(); setSubmitOpen(true); }}>Annoncer un événement</a></li>
+          <li><a href="#annoncer" onClick={(e) => { e.preventDefault(); window.openSubmitEvent(); }}>Annoncer un événement</a></li>
           <li><a href="#contact" onClick={(e) => { e.preventDefault(); window.openContact('Signalement d\'erreur'); }}>Signaler une erreur</a></li>
           <li><a href="#contact" onClick={(e) => { e.preventDefault(); window.openContact('Devenir partenaire'); }}>Devenir partenaire</a></li>
         </ul></div>
       </div>
       <div className="footer-bottom">
         <span>© 2026 — Les Tuffes · Site indépendant</span>
-        <span>Mentions légales · Confidentialité</span>
+        <span><a href="mentions-legales.html">Mentions légales · Confidentialité</a></span>
       </div>
     </footer>
   );
@@ -335,7 +346,6 @@ function App() {
   const [tweaks, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(null);
-  const [submitOpen, setSubmitOpen] = useState(false);
   const [, forceRender] = React.useReducer(x => x + 1, 0);
 
   useEffect(() => {
@@ -352,8 +362,8 @@ function App() {
   // Ouvre le modal de soumission si l'URL est /#annoncer (depuis n'importe quelle page)
   useEffect(() => {
     const checkHash = () => {
-      if (window.location.hash === '#annoncer') {
-        setSubmitOpen(true);
+      if (window.location.hash === '#annoncer' && typeof window.openSubmitEvent === 'function') {
+        window.openSubmitEvent();
         history.replaceState(null, '', window.location.pathname + window.location.search);
       }
     };
@@ -375,7 +385,7 @@ function App() {
     <>
       <Disclaimer />
       <Nav theme={tweaks.theme} onToggleTheme={toggleTheme} />
-      <Hero next={next} />
+      <Hero next={next} onSelect={setSelected} />
 
       <section className="section" data-screen-label="Calendrier">
         <div className="section-head">
@@ -405,7 +415,7 @@ function App() {
               une minute. Examen avant publication.
             </p>
           </div>
-          <button className="cta-annoncer-btn" onClick={() => setSubmitOpen(true)}>
+          <button className="cta-annoncer-btn" onClick={() => window.openSubmitEvent()}>
             Annoncer un événement →
           </button>
         </div>
@@ -417,7 +427,6 @@ function App() {
       <Footer />
 
       <EventModal event={selected} onClose={() => setSelected(null)} />
-      <window.SubmitEventModal open={submitOpen} onClose={() => setSubmitOpen(false)} />
 
       <TweaksUI title="Tweaks">
         <window.TweakSection label="Apparence" />
