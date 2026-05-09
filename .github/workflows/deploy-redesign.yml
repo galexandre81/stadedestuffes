@@ -1,0 +1,58 @@
+name: Build & deploy redesign
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'redesign/**'
+      - '.github/workflows/deploy-redesign.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: redesign
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: redesign/package.json
+
+      - name: Install Babel
+        run: npm install --no-save --no-audit --no-fund @babel/cli@^7.25.0 @babel/core@^7.25.0 @babel/preset-react@^7.25.0
+
+      - name: Compile JSX → JS
+        run: npm run build
+
+      - name: Strip JSX sources from artifact
+        run: rm -f *.jsx package.json babel.config.json README.md
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: redesign/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
