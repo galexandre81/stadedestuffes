@@ -10,6 +10,7 @@ flux RSS exploitable, un fallback HTML scanne les pages d'actualités.
 
 import os
 import logging
+import re
 import time
 from datetime import datetime, timezone
 
@@ -17,6 +18,36 @@ import feedparser
 import requests
 from bs4 import BeautifulSoup
 from supabase import create_client, Client
+
+# Mois français → numéro, pour parser les dates extraites du texte HTML.
+FRENCH_MONTHS = {
+    "janvier": 1, "février": 2, "fevrier": 2, "mars": 3, "avril": 4,
+    "mai": 5, "juin": 6, "juillet": 7, "août": 8, "aout": 8,
+    "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12, "decembre": 12,
+}
+# Capture "DD MOIS YYYY" (sensible aux accents). Le 1er match dans le texte est
+# en pratique la date de publication, juste après "Publiée le" / "Le ".
+DATE_FR_RE = re.compile(
+    r"\b(\d{1,2})\s+(janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[ûu]t|septembre|octobre|novembre|d[ée]cembre)\s+(\d{4})\b",
+    re.IGNORECASE,
+)
+
+
+def extract_published_at_from_text(text: str) -> str | None:
+    """Cherche la première date "DD mois YYYY" dans le texte d'un article HTML.
+    Retourne une chaîne ISO 8601 (UTC) ou None si rien n'est trouvé."""
+    if not text:
+        return None
+    m = DATE_FR_RE.search(text)
+    if not m:
+        return None
+    try:
+        day = int(m.group(1))
+        month = FRENCH_MONTHS[m.group(2).lower()]
+        year = int(m.group(3))
+        return datetime(year, month, day, tzinfo=timezone.utc).isoformat()
+    except (KeyError, ValueError):
+        return None
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -202,13 +233,14 @@ def scrape_html_news_page(source: dict, html: bytes) -> tuple[int, int, int]:
 
         sport_tags = detect_sport_tags(article_text + " " + title)
         summary = article_text[:400] + ("…" if len(article_text) > 400 else "")
+        published_at = extract_published_at_from_text(article_text)
 
         row = {
             "title":           title[:255],
             "url":             url,
             "source_name":     name,
             "source_url":      source["url"],
-            "published_at":    None,
+            "published_at":    published_at,
             "summary":         summary,
             "image_url":       None,
             "sport_tags":      sport_tags,
