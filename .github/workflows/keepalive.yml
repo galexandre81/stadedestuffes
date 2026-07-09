@@ -1,0 +1,39 @@
+name: Keepalive
+
+# GitHub désactive automatiquement les workflows planifiés (cron) après
+# 60 jours SANS activité de commit sur le repo. Comme ce projet peut rester
+# des semaines sans commit manuel, les scrapers (scrape-articles / scrape-events)
+# finissaient par se mettre en veille (state=disabled_inactivity).
+#
+# Ce workflow tourne le 1er de chaque mois, écrit un horodatage et pousse un
+# commit : cette activité remet le compteur des 60 jours à zéro pour TOUS les
+# workflows planifiés (y compris lui-même). Zéro intervention manuelle ensuite.
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'   # le 1er de chaque mois à 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bump keepalive timestamp & commit
+        run: |
+          mkdir -p .github
+          date -u +"Dernier keepalive : %Y-%m-%dT%H:%M:%SZ" > .github/last-keepalive.txt
+          git config user.name  "keepalive-bot"
+          git config user.email "actions@github.com"
+          git add .github/last-keepalive.txt
+          if git diff --cached --quiet; then
+            echo "Rien à committer."
+          else
+            git commit -m "chore: keepalive (garde les scrapers cron actifs)"
+            git push
+          fi
