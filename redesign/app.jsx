@@ -40,8 +40,12 @@ function fmtRange(ev) {
 }
 
 function fmtArticleDate(s) {
-  const d = parseDate(s);
-  if (!d) return '';
+  if (!s) return '';
+  // published_at peut être une date (YYYY-MM-DD) OU un timestamp ISO complet.
+  // parseDate() ajoutait 'T12:00:00' même aux timestamps complets → Invalid Date
+  // → affichait « NaN undefined NaN ». On n'ajoute l'heure que pour une date nue.
+  const d = new Date(s + (s.length === 10 ? 'T12:00:00' : ''));
+  if (isNaN(d)) return '';
   return `${d.getDate()} ${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`;
 }
 
