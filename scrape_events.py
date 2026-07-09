@@ -21,6 +21,7 @@ Structure HTML confirmée (avril 2026) :
 
 import os
 import re
+import html
 import logging
 import time
 from datetime import datetime, timezone
@@ -176,6 +177,37 @@ def parse_ffs_date(date_div) -> tuple[str | None, str | None]:
     return date_start, (date_end if date_end != date_start else None)
 
 
+def parse_ffs_table_dates(item) -> tuple[str | None, str | None]:
+    """
+    Extrait les dates depuis le TABLEAU de détail de l'item FFS.
+
+    Chaque item du calendrier liste ses épreuves avec une date machine
+    au format JJ/MM/AA (ex : « 05/07/26 »). C'est bien plus fiable que
+    l'en-tête abrégé en français (« Jui. », « Aoû. »…) qui, lui, dépend
+    d'un dictionnaire d'abréviations forcément incomplet — c'est ce qui
+    faisait perdre les événements d'été comme le SAMSE SUMMER TOUR.
+
+    Retourne (date_start, date_end) = min et max des dates trouvées.
+    date_end vaut None pour un événement d'un seul jour.
+    """
+    text = item.get_text(" ", strip=True)
+    dates: set = set()
+    for d, m, y in re.findall(r"\b(\d{2})/(\d{2})/(\d{2,4})\b", text):
+        year = int(y)
+        if year < 100:
+            year += 2000
+        try:
+            dates.add(datetime(year, int(m), int(d)).date())
+        except ValueError:
+            continue
+    if not dates:
+        return None, None
+    ordered = sorted(dates)
+    date_start = ordered[0].strftime("%Y-%m-%d")
+    date_end = ordered[-1].strftime("%Y-%m-%d")
+    return date_start, (date_end if date_end != date_start else None)
+
+
 def upsert_event(row: dict) -> bool:
     """Insère l'événement s'il n'existe pas déjà (déduplication sur title + date_start)."""
     try:
@@ -258,9 +290,12 @@ def scrape_ffs_calendrier() -> int:
                 if not is_lieu_tuffes(title) and not is_lieu_tuffes(full_text):
                     continue
 
-                # Date
-                date_div = item.select_one(".el-date")
-                date_start, date_end = parse_ffs_date(date_div)
+                # Date : d'abord le tableau de détail (JJ/MM/AA, fiable),
+                # sinon repli sur l'en-tête abrégé (« 05 Jui. 2026 »).
+                date_start, date_end = parse_ffs_table_dates(item)
+                if not date_start:
+                    date_div = item.select_one(".el-date")
+                    date_start, date_end = parse_ffs_date(date_div)
                 if not date_start:
                     log.debug("   date non parsée pour : %s", title[:60])
                     continue
@@ -394,16 +429,19 @@ def scrape_cnsnmm() -> tuple[int, int, int]:
             "date_end": date_end,
             "public_access": True,
             "has_catering": None,
-            "notes": "Source officielle CNSNMM",
+            # La page ENSM mêle actualités (« Portail Montagne ») et événements
+            # au stade (sportifs OU non). On ne peut pas trancher le lieu de
+            # façon fiable → statut 'pending' pour validation admin.
+            "notes": "Source officielle CNSNMM (à valider : est-ce bien au stade ?)",
             "source_name": "CNSNMM",
             "source_url": href,
-            "status": "published",
+            "status": "pending",
             "source_type": "scraped",
         }
         outcome = dedup_upsert_event(sb, row)
         added, merged, errors = _classify_status(outcome, added, merged, errors)
         if outcome == "added":
-            log.info("   + [CNSNMM] %s (%s)", title[:70], date_start)
+            log.info("   + [CNSNMM/pending] %s (%s)", title[:70], date_start)
 
     return added, merged, errors
 
@@ -522,7 +560,8 @@ def scrape_transju() -> tuple[int, int, int]:
 def scrape_jura_tourism() -> tuple[int, int, int]:
     """Scrape l'agenda jura-tourism.com pour repérer les événements au stade."""
     base = "https://www.jura-tourism.com"
-    list_url = f"{base}/agenda/"
+    # L'ancienne URL /agenda/ renvoie désormais 404 ; le nouvel agenda est ici :
+    list_url = f"{base}/en-ce-moment/tout-lagenda-du-jura/"
     added = merged = errors = 0
     try:
         resp = requests.get(list_url, timeout=TIMEOUT, headers=HEADERS)
@@ -536,9 +575,12 @@ def scrape_jura_tourism() -> tuple[int, int, int]:
     seen_links: set[str] = set()
     for a in soup.find_all("a", href=True):
         href = a["href"].strip()
-        if "/agenda/" not in href:
+        # Fiche d'événement : /agenda/<slug> (ancien) ou /fiche… (apidae)
+        if not ("/agenda/" in href or "/fiche" in href):
             continue
-        if href.endswith("/agenda/") or href.endswith("/agenda"):
+        # Ignorer les pages d'index / catégories (pas des événements)
+        if href.rstrip("/").endswith(("agenda", "tout-lagenda-du-jura",
+                                       "evenements-sportifs", "evenements-culturels")):
             continue
         # URL absolue
         if href.startswith("/"):
@@ -604,6 +646,84 @@ def scrape_jura_tourism() -> tuple[int, int, int]:
         if outcome == "added":
             log.info("   + [JuraTourisme] %s (%s)", title[:70], date_start)
         time.sleep(0.4)
+
+    return added, merged, errors
+
+
+# ── 4bis. Prémanon — agenda officiel de la commune (The Events Calendar) ──────
+def scrape_premanon_events() -> tuple[int, int, int]:
+    """
+    Scrape l'agenda officiel de la commune de Prémanon (premanon.com),
+    propulsé par WordPress « The Events Calendar » qui expose une API REST
+    structurée avec un champ `venue`. On ne garde que les événements DONT
+    le lieu, le titre ou la description mentionnent le stade des Tuffes /
+    CNSNMM (et non tous les événements du village comme la bibliothèque).
+
+    Source fiable et datée (JJ machine), toutes saisons.
+    """
+    base = "https://premanon.com/wp-json/tribe/events/v1/events"
+    STADE_KW = ("tuffes", "cnsnmm", "stade nordique")
+    added = merged = errors = 0
+    page = 1
+
+    while page <= 8:
+        url = f"{base}?per_page=50&page={page}&start_date=2025-06-01"
+        try:
+            resp = requests.get(url, timeout=TIMEOUT, headers=HEADERS)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as exc:
+            log.warning("   Prémanon agenda inaccessible (page %d) : %s", page, exc)
+            errors += 1
+            break
+
+        events = data.get("events", [])
+        if not events:
+            break
+
+        for e in events:
+            venue = ((e.get("venue") or {}).get("venue") or "")
+            title = html.unescape(e.get("title", "") or "").strip()
+            desc = BeautifulSoup(e.get("description", "") or "", "html.parser").get_text(" ", strip=True)
+            blob = f"{title} {venue} {desc}".lower()
+
+            # Filtre : uniquement les événements au stade / CNSNMM
+            if not any(kw in blob for kw in STADE_KW):
+                continue
+
+            date_start = (e.get("start_date") or "")[:10]
+            date_end = (e.get("end_date") or "")[:10]
+            if not date_start:
+                continue
+            if not is_future_date(date_start):
+                continue
+            if date_end == date_start or not date_end:
+                date_end = None
+
+            sport = detect_sport(f"{title} {desc}", "Nordique")
+
+            row = {
+                "title":         title[:255],
+                "sport":         sport,
+                "date_start":    date_start,
+                "date_end":      date_end,
+                "public_access": True,
+                "has_catering":  None,
+                "notes":         (desc[:400] + "…") if len(desc) > 400 else (desc or None),
+                "source_name":   "Prémanon (commune)",
+                "source_url":    e.get("url") or "https://premanon.com/evenements/",
+                "status":        "published",
+                "source_type":   "scraped",
+            }
+            outcome = dedup_upsert_event(sb, row)
+            added, merged, errors = _classify_status(outcome, added, merged, errors)
+            if outcome == "added":
+                log.info("   + [Prémanon] %s (%s)", title[:70], date_start)
+
+        if len(events) < 50:
+            break
+        page += 1
+        time.sleep(0.5)
 
     return added, merged, errors
 
@@ -764,6 +884,12 @@ def main():
     a, m, e = scrape_jura_tourism()
     total_added += a; total_merged += m; total_errors += e
     log.info("   JuraTourisme : %d ajoutés, %d fusionnés, %d erreurs", a, m, e)
+    time.sleep(2)
+
+    log.info("→ Scraping agenda commune de Prémanon")
+    a, m, e = scrape_premanon_events()
+    total_added += a; total_merged += m; total_errors += e
+    log.info("   Prémanon : %d ajoutés, %d fusionnés, %d erreurs", a, m, e)
     time.sleep(2)
 
     log.info("→ Scraping clubs locaux (auto-pending)")
