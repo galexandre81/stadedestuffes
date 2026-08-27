@@ -13,7 +13,36 @@ Version pré-compilée du site, prête pour la production. Source en JSX, build 
 | `/mentions-legales.html` | `mentions.jsx` | `mentions.js` |
 | `/admin.html` *(noindex)* | `admin.jsx` | `admin.js` |
 
-Partagés : `shell.jsx` (Disclaimer/Nav/Footer), `tweaks-panel.jsx` (no-op), `submit-event.jsx` (modal de soumission), `data.js` (Supabase fetch), `config.js` (clés), `styles.css`, `photos/`, `favicon.svg`.
+Partagés : `shell.jsx` (Disclaimer/Nav/Footer), `tweaks-panel.jsx` (no-op), `submit-event.jsx` (modal de soumission), `data.js` (Supabase fetch + fusion du seed), `events-seed.js` (épreuves confirmées à la main), `config.js` (clés), `styles.css`, `photos/`, `favicon.svg`.
+
+## Agenda de la saison
+
+Le calendrier vient de Supabase (`data.js`), alimenté par `../scrape_events.py`. Deux compléments :
+
+- **`events-seed.js`** — les épreuves vérifiées à la main pour la saison (Cyclo Haut-Jura, les deux étapes SAMSE National Tour, le Tour de Ski FIS 2027). `data.js` les fusionne avec Supabase : une ligne Supabase à ±1 jour et au titre proche gagne, et le seed ne fait que compléter ses champs manquants. Le calendrier reste donc juste même si le scraper n'a pas encore tourné ou si Supabase est injoignable. La même liste est répliquée dans `CONFIRMED_EVENTS` (scraper) — les deux sont testées ensemble par `../test_agenda_2026_2027.py`.
+- **Filtres discipline + niveau** — le niveau (`Régional` / `National` / `International`) vient de la colonne `level` quand elle existe, sinon il est déduit du titre et des notes (`eventLevel()` dans `app.jsx`). `is_highlight` affiche le badge « Événement phare ».
+
+### Sources du scraper
+
+`../scrape_events.py` interroge, à chaque run (toutes les 8 h) : le calendrier FFS, l'agenda CNSNMM, Cyclo Haut-Jura, le feed et les pages événement de La Transju', Jura Tourisme, l'agenda de Prémanon et les pages de clubs locaux — dont les sources ajoutées pour la saison 2026-2027 :
+
+| Source | Ce qu'elle apporte |
+|---|---|
+| [Vélo-Cyclosport](https://www.velo-cyclosport.com/agenda/index.php) | agenda national des cyclosportives (Cyclo Haut-Jura) |
+| [Ski-Nordique.net](https://www.ski-nordique.net/) | calendrier national FFS (étapes SAMSE National Tour) |
+| [World Cup Station des Rousses](https://www.worldcupstationdesrousses.fr/) | Coupe du monde FIS / Tour de Ski |
+| [La Transju'](https://www.latransju.com/la-transjeunes/) | Transju'Jeunes et Transju'Trails (pages événement) |
+| [Haut-Jura Ski](https://www.hautjuraski.fr/evenements) | calendrier de saison du club (tableau sans page détail) |
+
+Les colonnes `level`, `organizer`, `is_highlight` et `date_tbd` sont ajoutées par [`../migration_events_agenda.sql`](../migration_events_agenda.sql). **Le site et le scraper fonctionnent sans elle** : ils détectent leur absence et retombent sur l'ancien schéma.
+
+### Changer de saison
+
+Trois endroits, une fois par an :
+
+1. `app.jsx` → constante `SEASON` (`{ long, short }`)
+2. `venir.jsx` → eyebrow « Infos pratiques · Saison … »
+3. `index.html` / `articles.html` → `<title>` et meta `description` / OG / Twitter
 
 ## Workflow d'édition
 
@@ -122,7 +151,7 @@ Les anciens fichiers à la racine (`index.html`, `articles.html`…) ne servent 
   - `FAQPage` sur la page Venir (5 Q/R indexables par les IA et Google)
   - `AboutPage` sur À propos
   - `CollectionPage` sur Articles
-- **`sitemap.xml`** mis à jour (5 pages, dates 2026-05-09)
+- **`sitemap.xml`** mis à jour (5 pages, dates 2026-08-27)
 - **`robots.txt`** : indexation OK partout sauf admin
 - **`<meta name="robots" content="index, nofollow">`** sur mentions légales (indexable mais ne diffuse pas le PageRank)
 - **`hreflang`** : non requis (mono-langue FR)

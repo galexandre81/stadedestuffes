@@ -87,17 +87,28 @@ def is_future_date(date_str: str, tolerate_today: bool = True) -> bool:
     return d >= today if tolerate_today else d > today
 
 
-def find_duplicate(sb, candidate_row: dict, similarity_threshold: float = 0.5):
+BASE_SELECT_FIELDS = (
+    "id", "title", "date_start", "date_end", "source_name", "source_url",
+    "notes", "has_catering", "public_access", "sport", "additional_sources",
+    "status",
+)
+
+# Champs recopiés depuis la nouvelle ligne quand l'existante ne les a pas.
+BASE_FILL_FIELDS = ("notes", "has_catering", "public_access", "date_end")
+
+
+def find_duplicate(sb, candidate_row: dict, similarity_threshold: float = 0.5,
+                   extra_fields: tuple = ()):
     try:
         d = datetime.strptime(candidate_row["date_start"], "%Y-%m-%d").date()
     except (ValueError, KeyError, TypeError):
         return None
     d_min = (d - timedelta(days=1)).isoformat()
     d_max = (d + timedelta(days=1)).isoformat()
+    select_fields = ", ".join(BASE_SELECT_FIELDS + tuple(extra_fields))
     try:
         result = sb.table("events").select(
-            "id, title, date_start, date_end, source_name, source_url, "
-            "notes, has_catering, public_access, sport, additional_sources, status"
+            select_fields
         ).gte("date_start", d_min).lte("date_start", d_max).execute()
     except Exception as exc:
         log.warning("dedup: erreur lecture events : %s", exc)
@@ -117,7 +128,8 @@ def find_duplicate(sb, candidate_row: dict, similarity_threshold: float = 0.5):
     return best_match if best_score >= similarity_threshold else None
 
 
-def merge_into_existing(sb, existing: dict, new_row: dict) -> bool:
+def merge_into_existing(sb, existing: dict, new_row: dict,
+                       fill_fields: tuple = BASE_FILL_FIELDS) -> bool:
     updates = {}
     new_source_name = new_row.get("source_name")
     new_source_url = new_row.get("source_url")
@@ -131,7 +143,7 @@ def merge_into_existing(sb, existing: dict, new_row: dict) -> bool:
         updates["additional_sources"] = existing_extras + [
             {"source_name": new_source_name, "source_url": new_source_url}
         ]
-    for field in ("notes", "has_catering", "public_access", "date_end"):
+    for field in fill_fields:
         if existing.get(field) in (None, "") and new_row.get(field) not in (None, ""):
             updates[field] = new_row[field]
     if not updates:
@@ -146,12 +158,18 @@ def merge_into_existing(sb, existing: dict, new_row: dict) -> bool:
         return False
 
 
-def upsert_event(sb, row: dict) -> str:
-    """Returns 'added', 'merged', 'unchanged' or 'error'."""
+def upsert_event(sb, row: dict, extra_fields: tuple = ()) -> str:
+    """Returns 'added', 'merged', 'unchanged' or 'error'.
+
+    `extra_fields` : colonnes optionnelles (level, organizer, is_highlight…) à
+    lire sur la ligne existante et à compléter si elle ne les a pas encore.
+    """
     try:
-        existing = find_duplicate(sb, row)
+        existing = find_duplicate(sb, row, extra_fields=extra_fields)
         if existing:
-            changed = merge_into_existing(sb, existing, row)
+            changed = merge_into_existing(
+                sb, existing, row, fill_fields=BASE_FILL_FIELDS + tuple(extra_fields)
+            )
             return "merged" if changed else "unchanged"
         sb.table("events").insert(row).execute()
         return "added"
