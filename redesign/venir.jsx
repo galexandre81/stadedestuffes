@@ -73,7 +73,7 @@ function VenirPage() {
       <window.Nav active="venir" />
 
       <section className="page-hero">
-        <div className="page-hero-eyebrow">Infos pratiques · Saison 2025–26</div>
+        <div className="page-hero-eyebrow">Infos pratiques · Saison 2026–27</div>
         <h1 className="page-hero-title">Venir aux <em>Tuffes</em></h1>
         <p className="page-hero-deck">
           Adresse, accès, parking et hébergements pour préparer sereinement votre venue

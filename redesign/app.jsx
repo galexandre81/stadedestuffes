@@ -4,6 +4,10 @@ const { useState, useEffect, useMemo } = React;
 const MONTHS_SHORT = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const MONTHS_LONG = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
+// Saison courante — à mettre à jour une fois par an (voir aussi les <title>/meta
+// des pages HTML et le libellé de venir.jsx).
+const SEASON = { long: '2026 – 2027', short: '26–27' };
+
 const SPORTS = [
   { key: 'all', label: 'Toutes disciplines' },
   { key: 'Biathlon', label: 'Biathlon' },
@@ -11,7 +15,41 @@ const SPORTS = [
   { key: 'Combiné nordique', label: 'Combiné' },
   { key: 'Saut à ski', label: 'Saut à ski' },
   { key: 'Para', label: 'Para' },
+  { key: 'Cyclisme', label: 'Cyclisme' },
 ];
+
+const LEVELS = [
+  { key: 'all', label: 'Tous niveaux' },
+  { key: 'International', label: 'International' },
+  { key: 'National', label: 'National' },
+  { key: 'Régional', label: 'Régional' },
+];
+
+// `level` est renseigné pour les épreuves vérifiées à la main ; pour les
+// événements simplement scrapés on le déduit du titre et des notes (les codes
+// FFS « -NA » valent national, « -CR »/« -SR » régional).
+const RE_INTERNATIONAL = /coupe du monde|world cup|tour de ski|\bfis\b|\bibu\b|international|inter-nations/i;
+const RE_NATIONAL = /national|championnat de france|france\b|samse|grand prix|\bffs-[a-z]+-na\b/i;
+
+const LEVEL_SLUG = { International: 'intl', National: 'nat', 'Régional': 'reg' };
+
+// Libellé du badge « phare » : on précise Coupe du monde quand c'en est une.
+function highlightLabel(ev) {
+  const isWorldCup = /coupe du monde|world cup|tour de ski/i.test(`${ev.title || ''} ${ev.notes || ''}`);
+  return isWorldCup ? '★ Événement phare · Coupe du monde' : '★ Événement phare';
+}
+
+function eventLevel(ev) {
+  if (ev.level) {
+    // « National / Inter-nations » et autres libellés composés → 1re valeur connue.
+    const found = LEVELS.slice(1).find(l => ev.level.toLowerCase().includes(l.key.toLowerCase()));
+    if (found) return found.key;
+  }
+  const haystack = `${ev.title || ''} ${ev.notes || ''}`;
+  if (RE_INTERNATIONAL.test(haystack)) return 'International';
+  if (RE_NATIONAL.test(haystack)) return 'National';
+  return 'Régional';
+}
 
 const today = () => {
   const d = new Date();
@@ -31,12 +69,19 @@ const dateStatus = (ev) => {
 function fmtRange(ev) {
   const s = parseDate(ev.date_start);
   if (!s) return '—';
+  // Épreuve annoncée pour un mois sans jour publié : on ne montre pas de jour.
+  if (ev.date_tbd) return `${MONTHS_LONG[s.getMonth()]} ${s.getFullYear()} · date à confirmer`;
   if (ev.date_end && ev.date_end !== ev.date_start) {
     const e = parseDate(ev.date_end);
     if (s.getMonth() === e.getMonth()) return `${s.getDate()}–${e.getDate()} ${MONTHS_LONG[s.getMonth()]} ${s.getFullYear()}`;
     return `${s.getDate()} ${MONTHS_LONG[s.getMonth()]} – ${e.getDate()} ${MONTHS_LONG[e.getMonth()]} ${e.getFullYear()}`;
   }
   return `${s.getDate()} ${MONTHS_LONG[s.getMonth()]} ${s.getFullYear()}`;
+}
+
+function truncate(text, max) {
+  if (!text || text.length <= max) return text;
+  return text.slice(0, text.lastIndexOf(' ', max) > 0 ? text.lastIndexOf(' ', max) : max).trim() + '…';
 }
 
 function fmtArticleDate(s) {
@@ -94,7 +139,7 @@ function Hero({ next, onSelect }) {
       </div>
       <div className="hero-content">
         <div>
-          <div className="hero-eyebrow">Saison 2025 – 2026</div>
+          <div className="hero-eyebrow">Saison {SEASON.long}</div>
           <h1 className="hero-title">Le calendrier des compétitions du <em>stade nordique</em> des Tuffes.</h1>
           <p className="hero-deck">Une saison entière de ski de fond, biathlon, combiné nordique et saut à ski, réunie en un seul endroit. Tout ce qui se passe à Prémanon, en un coup d'œil.</p>
           <p className="hero-deck" style={{ marginTop: 16, fontSize: 14, color: 'var(--accent)', fontWeight: 500 }}>
@@ -104,6 +149,7 @@ function Hero({ next, onSelect }) {
         {next && (
           <div className="hero-next">
             <div className="hero-next-eyebrow">Prochain événement</div>
+            {next.is_highlight && <div className="event-flag">{highlightLabel(next)}</div>}
             <div className="hero-next-date">{fmtRange(next)}</div>
             <div className="hero-next-title">{next.title}</div>
             <div className="hero-next-meta">
@@ -127,20 +173,26 @@ function EventRow({ ev, onClick }) {
   if (e && e.getMonth() === s.getMonth() && e.getDate() !== s.getDate()) {
     dayDisplay = `${dayDisplay}–${String(e.getDate()).padStart(2, '0')}`;
   }
+  const level = eventLevel(ev);
   return (
-    <div className="event-row" onClick={onClick}>
+    <div className={'event-row' + (ev.is_highlight ? ' highlight' : '')} onClick={onClick}>
       <div className={'event-date' + (status === 'past' ? ' past' : '')}>
-        {dayDisplay}
+        {ev.date_tbd ? <span className="tbd">Date à confirmer</span> : dayDisplay}
         <span className="month">{MONTHS_SHORT[s.getMonth()]} {s.getFullYear()}</span>
       </div>
       <div className="event-main">
-        <div className="event-discipline">{ev.sport}</div>
+        <div className="event-discipline">
+          {ev.sport}
+          <span className={'event-level lvl-' + LEVEL_SLUG[level]}>{level}</span>
+        </div>
+        {ev.is_highlight && <div className="event-flag">{highlightLabel(ev)}</div>}
         <h3 className="event-title">{ev.title}</h3>
         <div className="event-info">
           {ev.public_access === true && <span><span className="dot public"></span>Public admis</span>}
           {ev.public_access === false && <span><span className="dot restricted"></span>Accès restreint</span>}
           {ev.has_catering === true && <span>Restauration</span>}
-          {ev.notes && <span style={{ opacity: 0.7 }}>· {ev.notes}</span>}
+          {ev.organizer && <span>Org. {ev.organizer}</span>}
+          {ev.notes && <span style={{ opacity: 0.7 }}>· {truncate(ev.notes, 120)}</span>}
         </div>
       </div>
       <div className="event-arrow">→</div>
@@ -148,8 +200,11 @@ function EventRow({ ev, onClick }) {
   );
 }
 
-function Events({ events, filter, onSelect }) {
-  const filtered = filter === 'all' ? events : events.filter(e => e.sport === filter);
+function Events({ events, filter, level, onSelect }) {
+  const filtered = events.filter(e =>
+    (filter === 'all' || e.sport === filter) &&
+    (level === 'all' || eventLevel(e) === level)
+  );
   const upcoming = filtered.filter(e => dateStatus(e) !== 'past').sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
   const past = filtered.filter(e => dateStatus(e) === 'past').sort((a, b) => new Date(b.date_start) - new Date(a.date_start));
   const [openPast, setOpenPast] = useState(false);
@@ -159,7 +214,7 @@ function Events({ events, filter, onSelect }) {
         {upcoming.map(ev => <EventRow key={ev.id} ev={ev} onClick={() => onSelect(ev)} />)}
         {upcoming.length === 0 && (
           <div style={{ padding: '40px 0', textAlign: 'center', fontFamily: 'var(--serif)', color: 'var(--muted)', fontStyle: 'italic' }}>
-            Aucune compétition à venir pour cette discipline.
+            Aucune compétition à venir pour cette sélection.
           </div>
         )}
       </div>
@@ -324,6 +379,13 @@ function Footer() {
 
 function EventModal({ event, onClose }) {
   if (!event) return null;
+  const level = eventLevel(event);
+  // Toutes les sources listées : source principale + sources ajoutées par la
+  // fusion de doublons côté scraper (additional_sources).
+  const sources = [
+    { source_name: event.source_name, source_url: event.source_url },
+    ...(Array.isArray(event.additional_sources) ? event.additional_sources : []),
+  ].filter(s => s && (s.source_name || s.source_url));
   return (
     <div className="overlay open" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
@@ -332,11 +394,17 @@ function EventModal({ event, onClose }) {
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
-          <div className="modal-eyebrow">{event.sport}</div>
+          <div className="modal-eyebrow">
+            {event.sport}
+            <span className={'event-level lvl-' + LEVEL_SLUG[level]}>{level}</span>
+          </div>
+          {event.is_highlight && <div className="event-flag modal-flag">{highlightLabel(event)}</div>}
           <h3 className="modal-title">{event.title}</h3>
           <div className="modal-rows">
             <div className="modal-row"><div className="lbl">Dates</div><div className="val">{fmtRange(event)}</div></div>
             <div className="modal-row"><div className="lbl">Lieu</div><div className="val">Stade nordique des Tuffes — Prémanon, Jura</div></div>
+            <div className="modal-row"><div className="lbl">Niveau</div><div className="val">{event.level || level}</div></div>
+            {event.organizer && <div className="modal-row"><div className="lbl">Organisation</div><div className="val">{event.organizer}</div></div>}
             <div className="modal-row"><div className="lbl">Public</div><div className="val">{event.public_access === true ? 'Admis · accès libre' : event.public_access === false ? 'Restreint · sur invitation' : 'À confirmer'}</div></div>
             <div className="modal-row"><div className="lbl">Restauration</div><div className="val">{event.has_catering === true ? 'Sur place' : event.has_catering === false ? 'Aucune' : 'À confirmer'}</div></div>
             {event.notes && <div className="modal-row"><div className="lbl">Type d'épreuve</div><div className="val">{event.notes}</div></div>}
@@ -346,9 +414,22 @@ function EventModal({ event, onClose }) {
               <strong style={{ color: 'var(--text)', fontStyle: 'normal', fontFamily: 'var(--cond)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 600 }}>Source</strong>
             </div>
             {event.source_url ? (
-              <p style={{ marginBottom: 8 }}>
-                Information récupérée depuis <a href={event.source_url} target="_blank" rel="noopener" style={{ color: 'var(--accent)', borderBottom: '1px solid var(--accent)', fontStyle: 'normal' }}>{event.source_name || 'la source'}</a>.
-              </p>
+              <>
+                <p style={{ marginBottom: 8 }}>
+                  Information récupérée depuis{' '}
+                  {sources.map((src, i) => (
+                    <React.Fragment key={(src.source_url || src.source_name) + i}>
+                      {i > 0 && ', '}
+                      {src.source_url ? (
+                        <a href={src.source_url} target="_blank" rel="noopener" style={{ color: 'var(--accent)', borderBottom: '1px solid var(--accent)', fontStyle: 'normal' }}>{src.source_name || 'la source'}</a>
+                      ) : (src.source_name)}
+                    </React.Fragment>
+                  ))}.
+                </p>
+                <a className="modal-cta" href={event.source_url} target="_blank" rel="noopener">
+                  Infos pratiques & billetterie →
+                </a>
+              </>
             ) : (
               <p style={{ marginBottom: 8 }}>
                 Information : {event.source_name || 'Communauté'}.
@@ -370,6 +451,7 @@ function App() {
 
   const [tweaks, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
   const [filter, setFilter] = useState('all');
+  const [level, setLevel] = useState('all');
   const [selected, setSelected] = useState(null);
   const [, forceRender] = React.useReducer(x => x + 1, 0);
 
@@ -418,7 +500,7 @@ function App() {
       <section className="section" data-screen-label="Calendrier">
         <div className="section-head">
           <div>
-            <div className="section-eyebrow">Calendrier · Saison 25–26</div>
+            <div className="section-eyebrow">Calendrier · Saison {SEASON.short}</div>
             <h2 className="section-title">Les <em>compétitions</em><br/>aux Tuffes</h2>
           </div>
           <div className="section-meta">
@@ -426,17 +508,43 @@ function App() {
             Dernière mise à jour : aujourd'hui
           </div>
         </div>
-        <div className="filters">
-          {SPORTS.map(s => (
-            <button key={s.key} className={'filter-btn' + (filter === s.key ? ' active' : '')} onClick={() => setFilter(s.key)}>{s.label}</button>
-          ))}
+        <div className="filter-groups">
+          <div className="filter-group">
+            <span className="filter-label">Discipline</span>
+            <div className="filters" role="group" aria-label="Filtrer par discipline">
+              {SPORTS.map(s => (
+                <button
+                  key={s.key}
+                  type="button"
+                  className={'filter-btn' + (filter === s.key ? ' active' : '')}
+                  aria-pressed={filter === s.key}
+                  onClick={() => setFilter(s.key)}
+                >{s.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="filter-group">
+            <span className="filter-label">Niveau</span>
+            <div className="filters" role="group" aria-label="Filtrer par niveau">
+              {LEVELS.map(l => (
+                <button
+                  key={l.key}
+                  type="button"
+                  className={'filter-btn' + (level === l.key ? ' active' : '')}
+                  aria-pressed={level === l.key}
+                  onClick={() => setLevel(l.key)}
+                >{l.label}</button>
+              ))}
+            </div>
+          </div>
         </div>
         {window.STT_ERROR && (
           <div className="fld-error" style={{ marginBottom: 24 }}>
-            Impossible de charger les événements depuis Supabase ({window.STT_ERROR}). Réessayez en rechargeant la page.
+            Impossible de charger le calendrier complet depuis Supabase ({window.STT_ERROR}).
+            Seuls les événements confirmés à la main sont affichés — rechargez la page pour réessayer.
           </div>
         )}
-        <Events events={events} filter={filter} onSelect={setSelected} />
+        <Events events={events} filter={filter} level={level} onSelect={setSelected} />
 
         <div className="cta-annoncer">
           <div className="cta-annoncer-content">

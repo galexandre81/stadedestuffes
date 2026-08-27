@@ -7,9 +7,11 @@
 // Sends through FormSubmit (no email client required on the visitor's side).
 // Mounted as its own React root, available on every page that loads contact.js.
 
-const { useState, useEffect } = React;
-
+// NB : destructuration à l'intérieur du composant — app.js / articles.js
+// déclarent déjà `useState` au niveau global, et deux `const` de même nom
+// dans la portée globale font planter le second script chargé.
 function ContactModal() {
+  const { useState, useEffect } = React;
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState('');
   const [form, setForm] = useState({ name: '', email: '', message: '', honeypot: '' });
