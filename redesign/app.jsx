@@ -23,6 +23,11 @@ const LEVELS = [
   { key: 'International', label: 'International' },
   { key: 'National', label: 'National' },
   { key: 'Régional', label: 'Régional' },
+  // Evenements sans niveau de competition : entrainements de club, symposiums,
+  // journees portes ouvertes. Sans cette entree, eventLevel() ne reconnaissait
+  // pas la valeur et retombait sur la deduction par titre, qui leur collait un
+  // badge « Régional » faux.
+  { key: 'Autre', label: 'Autre' },
 ];
 
 // `level` est renseigné pour les épreuves vérifiées à la main ; pour les
@@ -31,7 +36,7 @@ const LEVELS = [
 const RE_INTERNATIONAL = /coupe du monde|world cup|tour de ski|\bfis\b|\bibu\b|international|inter-nations/i;
 const RE_NATIONAL = /national|championnat de france|france\b|samse|grand prix|\bffs-[a-z]+-na\b/i;
 
-const LEVEL_SLUG = { International: 'intl', National: 'nat', 'Régional': 'reg' };
+const LEVEL_SLUG = { International: 'intl', National: 'nat', 'Régional': 'reg', Autre: 'autre' };
 
 // Libellé du badge « phare » : on précise Coupe du monde quand c'en est une.
 function highlightLabel(ev) {

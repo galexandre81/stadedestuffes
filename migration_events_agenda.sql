@@ -1,4 +1,21 @@
 -- ============================================================
+-- ATTENTION : NE PAS REJOUER CE FICHIER TEL QUEL (28/08/2026)
+-- ============================================================
+-- Ce fichier n'a jamais ete applique sur le projet arkbrvzacbereyukqfte.
+-- Les colonnes level / organizer / is_highlight / date_tbd y ont ete ajoutees
+-- par migration_level_organizer.sql puis migration_level_taxonomie.sql, avec
+-- des choix differents :
+--   * is_highlight et date_tbd sont NULLABLES (ici : NOT NULL DEFAULT false)
+--   * level porte un CHECK, un DEFAULT et un NOT NULL, et accepte une
+--     quatrieme valeur 'Autre' (ici : texte libre sans contrainte)
+--   * pas d'index sur level
+-- Le rejouer ecraserait deux corrections : l'UPDATE is_highlight ci-dessous
+-- n'a aucune garde et repasserait a true le doublon du Tour de Ski mis de cote,
+-- et le motif notes ILIKE '%-NA%' reclasserait sans le resserrage FFS-[A-Z]+-NA.
+-- Conserve ici comme trace de la PR #1 (agenda 2026-2027).
+-- ============================================================
+
+-- ============================================================
 -- MIGRATION : agenda 2026-2027 — niveau, organisateur, mise en avant
 -- ============================================================
 -- À exécuter UNE SEULE FOIS dans Supabase :

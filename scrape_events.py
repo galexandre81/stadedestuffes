@@ -231,26 +231,6 @@ def parse_ffs_table_dates(item) -> tuple[str | None, str | None]:
     return date_start, (date_end if date_end != date_start else None)
 
 
-def upsert_event(row: dict) -> bool:
-    """Insère l'événement s'il n'existe pas déjà (déduplication sur title + date_start)."""
-    try:
-        existing = (
-            sb.table("events")
-            .select("id")
-            .eq("title", row["title"])
-            .eq("date_start", row["date_start"] or "")
-            .limit(1)
-            .execute()
-        )
-        if existing.data:
-            return False
-        sb.table("events").insert(row).execute()
-        return True
-    except Exception as exc:
-        log.error("   ✗ upsert ÉCHOUÉ pour '%s' : %s", row["title"][:60], exc)
-        return False
-
-
 def season_start_date() -> str:
     """
     Retourne la date de début de saison au format DD%2FMM%2FYYYY.
@@ -275,6 +255,8 @@ def scrape_ffs_calendrier() -> int:
 
     for disc_id, default_sport in FFS_DISCIPLINES:
         inserted_disc = 0
+        merged_disc = 0
+        error_disc = 0
         page = 1
 
         while True:
@@ -343,7 +325,13 @@ def scrape_ffs_calendrier() -> int:
                     "source_type":   "scraped",
                 }
 
-                if upsert_event(row):
+                # La source FFS passe par la meme deduplication que les autres
+                # sources : similarite de titre, chevauchement d'intervalles et
+                # garde-fou sur le sport. L'ancienne egalite stricte
+                # (title, date_start) creait un doublon par jour de competition
+                # (Championnats de France, SAMSE National Tour).
+                outcome = upsert_extended(row)
+                if outcome == "added":
                     log.info(
                         "   + [%s] %s  (%s%s)",
                         sport,
@@ -352,6 +340,12 @@ def scrape_ffs_calendrier() -> int:
                         f" → {date_end}" if date_end else "",
                     )
                     inserted_disc += 1
+                elif outcome == "merged":
+                    log.info("   ⤴ [%s] %s  (fusionné dans un événement existant)",
+                             sport, title[:70])
+                    merged_disc += 1
+                elif outcome == "error":
+                    error_disc += 1
 
             # Pagination : continue tant qu'il y a une page suivante
             if not soup.select_one("a.next.page-numbers"):
@@ -359,7 +353,8 @@ def scrape_ffs_calendrier() -> int:
             page += 1
             time.sleep(0.5)
 
-        log.info("FFS calendrier [%s] : %d événement(s) ajouté(s)", default_sport, inserted_disc)
+        log.info("FFS calendrier [%s] : %d ajouté(s), %d fusionné(s), %d erreur(s)",
+                 default_sport, inserted_disc, merged_disc, error_disc)
         inserted_total += inserted_disc
         time.sleep(1)
 

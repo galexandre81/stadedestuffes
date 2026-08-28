@@ -3,6 +3,8 @@ import pytest
 from dedup import (
     normalize_text, signature_tokens, jaccard,
     parse_french_date, is_future_date, MOIS_FR,
+    event_interval, intervals_overlap, sports_conflict,
+    find_duplicate, merge_into_existing,
 )
 
 
@@ -96,3 +98,194 @@ class TestIsFutureDate:
     def test_today_tolerated(self):
         from datetime import date
         assert is_future_date(date.today().isoformat()) is True
+
+
+# ── Stub Supabase minimal ─────────────────────────────────────────────────────
+
+class _FakeQuery:
+    def __init__(self, rows):
+        self._rows = rows
+        self.updates = None
+        self.updated_id = None
+
+    def select(self, *_a, **_k):
+        return self
+
+    def gte(self, _col, value):
+        self._rows = [r for r in self._rows if r.get("date_start", "") >= value]
+        return self
+
+    def lte(self, _col, value):
+        self._rows = [r for r in self._rows if r.get("date_start", "") <= value]
+        return self
+
+    def update(self, updates):
+        self.updates = updates
+        return self
+
+    def eq(self, _col, value):
+        self.updated_id = value
+        return self
+
+    def execute(self):
+        return type("Res", (), {"data": list(self._rows)})()
+
+
+class _FakeSB:
+    def __init__(self, rows):
+        self.query = _FakeQuery(rows)
+
+    def table(self, _name):
+        return self.query
+
+
+# ── Intervalles ───────────────────────────────────────────────────────────────
+
+class TestEventInterval:
+    def test_date_end_absente_retombe_sur_start(self):
+        from datetime import date
+        assert event_interval({"date_start": "2027-01-01"}) == (date(2027, 1, 1), date(2027, 1, 1))
+
+    def test_date_end_incoherente_est_bornee(self):
+        start, end = event_interval({"date_start": "2027-01-05", "date_end": "2027-01-01"})
+        assert start == end
+
+    def test_date_start_illisible(self):
+        assert event_interval({"date_start": "foo"}) == (None, None)
+
+
+class TestIntervalsOverlap:
+    def test_chevauchement_reel(self):
+        """Tour de Ski du 1er au 3 janvier contre une entrée datée du 3."""
+        a = event_interval({"date_start": "2027-01-01", "date_end": "2027-01-03"})
+        b = event_interval({"date_start": "2027-01-03"})
+        assert intervals_overlap(a, b) is True
+
+    def test_jours_consecutifs_toleres(self):
+        a = event_interval({"date_start": "2026-03-28"})
+        b = event_interval({"date_start": "2026-03-29"})
+        assert intervals_overlap(a, b) is True
+
+    def test_trop_eloignes(self):
+        a = event_interval({"date_start": "2026-03-01"})
+        b = event_interval({"date_start": "2026-03-20"})
+        assert intervals_overlap(a, b) is False
+
+    def test_date_invalide(self):
+        assert intervals_overlap(event_interval({"date_start": "x"}),
+                                 event_interval({"date_start": "2026-03-01"})) is False
+
+
+class TestSportsConflict:
+    def test_sports_differents(self):
+        assert sports_conflict("Biathlon", "Ski de fond") is True
+
+    def test_sport_inconnu_ne_bloque_pas(self):
+        assert sports_conflict("Biathlon", None) is False
+        assert sports_conflict("", "Ski de fond") is False
+
+    def test_meme_sport_insensible_a_la_casse(self):
+        assert sports_conflict("biathlon", "Biathlon ") is False
+
+
+# ── find_duplicate : les trois cas observés en base ───────────────────────────
+
+class TestFindDuplicateCasReels:
+    def test_tour_de_ski_multi_jours_est_detecte(self):
+        """L'écart de 2 jours dépassait l'ancienne fenêtre de plus ou moins 1 jour."""
+        existant = {
+            "id": 1, "title": "FIS Tour de Ski 2027 — Coupe du monde",
+            "date_start": "2027-01-01", "date_end": "2027-01-03",
+            "sport": "Ski de fond",
+        }
+        candidat = {
+            "title": "FIS Tour de Ski 2027 — Coupe du monde",
+            "date_start": "2027-01-03", "date_end": None,
+            "sport": "Ski de fond",
+        }
+        assert find_duplicate(_FakeSB([existant]), candidat) is not None
+
+    def test_championnats_de_france_disciplines_differentes_non_fusionnes(self):
+        """Titre identique, jours consécutifs, mais biathlon puis ski de fond."""
+        existant = {
+            "id": 2, "title": "CHAMPIONNATS DE FRANCE (LES TUFFES)",
+            "date_start": "2026-03-27", "date_end": None, "sport": "Biathlon",
+        }
+        candidat = {
+            "title": "CHAMPIONNATS DE FRANCE (LES TUFFES)",
+            "date_start": "2026-03-28", "date_end": None, "sport": "Ski de fond",
+        }
+        assert find_duplicate(_FakeSB([existant]), candidat) is None
+
+    def test_meme_discipline_jours_consecutifs_fusionne(self):
+        """SAMSE National Tour 6, 14 et 15 mars, même discipline."""
+        existant = {
+            "id": 3, "title": "SAMSE NATIONAL TOUR 6 (LAMOURA – LES TUFFES)",
+            "date_start": "2026-03-14", "date_end": None, "sport": "Ski de fond",
+        }
+        candidat = {
+            "title": "SAMSE NATIONAL TOUR 6 (LAMOURA – LES TUFFES)",
+            "date_start": "2026-03-15", "date_end": None, "sport": "Ski de fond",
+        }
+        assert find_duplicate(_FakeSB([existant]), candidat) is not None
+
+    def test_evenements_sans_rapport_non_fusionnes(self):
+        existant = {
+            "id": 4, "title": "LA TRAVERSEE DU MASSACRE (PREMANON)",
+            "date_start": "2026-03-01", "date_end": None, "sport": "Ski de fond",
+        }
+        candidat = {
+            "title": "BIATHLON REGIONAL U15 (STADE DES TUFFES)",
+            "date_start": "2026-02-28", "date_end": None, "sport": "Biathlon",
+        }
+        assert find_duplicate(_FakeSB([existant]), candidat) is None
+
+
+class TestMergeElargitLIntervalle:
+    def test_date_start_reculee_et_date_end_etendue(self):
+        existant = {
+            "id": 9, "title": "FIS Tour de Ski 2027", "date_start": "2027-01-03",
+            "date_end": None, "sport": "Ski de fond", "source_name": "A",
+        }
+        candidat = {
+            "title": "FIS Tour de Ski 2027", "date_start": "2027-01-01",
+            "date_end": "2027-01-03", "sport": "Ski de fond", "source_name": "A",
+        }
+        sb = _FakeSB([existant])
+        assert merge_into_existing(sb, existant, candidat) is True
+        assert sb.query.updates["date_start"] == "2027-01-01"
+        assert sb.query.updates["date_end"] == "2027-01-03"
+
+    def test_pas_de_retrecissement(self):
+        existant = {
+            "id": 10, "title": "X", "date_start": "2027-01-01",
+            "date_end": "2027-01-03", "sport": "Ski de fond", "source_name": "A",
+        }
+        candidat = {
+            "title": "X", "date_start": "2027-01-02", "date_end": "2027-01-02",
+            "sport": "Ski de fond", "source_name": "A",
+        }
+        sb = _FakeSB([existant])
+        merge_into_existing(sb, existant, candidat)
+        updates = sb.query.updates or {}
+        assert "date_start" not in updates
+        assert "date_end" not in updates
+
+
+class TestPreferenceLignePubliee:
+    def test_a_score_egal_la_ligne_publiee_gagne(self):
+        """Un doublon mis de côté en pending ne doit pas capter l'enrichissement."""
+        pending = {
+            "id": 50, "title": "FIS Tour de Ski 2027", "date_start": "2027-01-03",
+            "date_end": None, "sport": "Ski de fond", "status": "pending",
+        }
+        publie = {
+            "id": 51, "title": "FIS Tour de Ski 2027", "date_start": "2027-01-01",
+            "date_end": "2027-01-03", "sport": "Ski de fond", "status": "published",
+        }
+        candidat = {
+            "title": "FIS Tour de Ski 2027", "date_start": "2027-01-02",
+            "date_end": None, "sport": "Ski de fond",
+        }
+        trouve = find_duplicate(_FakeSB([pending, publie]), candidat)
+        assert trouve is not None and trouve["id"] == 51

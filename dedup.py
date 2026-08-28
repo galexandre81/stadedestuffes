@@ -97,14 +97,70 @@ BASE_SELECT_FIELDS = (
 BASE_FILL_FIELDS = ("notes", "has_catering", "public_access", "date_end")
 
 
+# Fenetre de lecture SQL. Large a dessein : un evenement deja en base peut
+# avoir commence plusieurs jours avant le candidat et courir encore (le Tour
+# de Ski va du 1er au 3 janvier). On ratisse large ici, puis on filtre
+# finement par chevauchement d'intervalles cote Python, ce qui conserve la
+# selectivite d'origine pour les evenements sans date_end.
+SEARCH_WINDOW_DAYS = 15
+
+
+def _as_date(value):
+    """'YYYY-MM-DD' -> date, ou None si illisible."""
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
+
+
+def event_interval(row: dict):
+    """Retourne (start, end) en dates. end retombe sur start si absent ou incoherent."""
+    start = _as_date(row.get("date_start"))
+    if start is None:
+        return None, None
+    end = _as_date(row.get("date_end")) or start
+    return start, max(start, end)
+
+
+def intervals_overlap(a, b, slack_days: int = 1) -> bool:
+    """
+    Chevauchement de deux intervalles inclusifs, avec tolerance en jours.
+
+    Le slack de 1 jour preserve le comportement historique : deux entrees
+    consecutives (J et J+1) sans date_end restent considerees comme le meme
+    evenement etale sur deux jours.
+    """
+    (a_start, a_end), (b_start, b_end) = a, b
+    if a_start is None or b_start is None:
+        return False
+    slack = timedelta(days=slack_days)
+    return a_start - slack <= b_end and b_start - slack <= a_end
+
+
+def sports_conflict(a, b) -> bool:
+    """
+    True si les deux sports sont connus ET differents.
+
+    Garde-fou indispensable : aux Tuffes, les Championnats de France de
+    biathlon et ceux de ski de fond portent le titre exact et se suivent d'un
+    jour. STOPWORDS avale "france" et "tuffes", les deux titres se reduisent au
+    seul token "championnats" et la similarite vaut 1.0. Sans ce test, la
+    deduplication ferait disparaitre une des deux disciplines du calendrier.
+    Un sport inconnu d'un cote ne bloque pas la fusion.
+    """
+    a = (a or "").strip().lower()
+    b = (b or "").strip().lower()
+    return bool(a and b and a != b)
+
+
 def find_duplicate(sb, candidate_row: dict, similarity_threshold: float = 0.5,
                    extra_fields: tuple = ()):
-    try:
-        d = datetime.strptime(candidate_row["date_start"], "%Y-%m-%d").date()
-    except (ValueError, KeyError, TypeError):
+    cand = event_interval(candidate_row)
+    if cand[0] is None:
         return None
-    d_min = (d - timedelta(days=1)).isoformat()
-    d_max = (d + timedelta(days=1)).isoformat()
+    window = timedelta(days=SEARCH_WINDOW_DAYS)
+    d_min = (cand[0] - window).isoformat()
+    d_max = (cand[1] + window).isoformat()
     select_fields = ", ".join(BASE_SELECT_FIELDS + tuple(extra_fields))
     try:
         result = sb.table("events").select(
@@ -119,7 +175,15 @@ def find_duplicate(sb, candidate_row: dict, similarity_threshold: float = 0.5,
     if not candidate_tokens:
         return None
     best_match, best_score = None, 0.0
-    for existing in result.data:
+    # A score egal, on prefere une ligne publiee. Un doublon mis de cote en
+    # 'pending' ne doit pas capter l'enrichissement a la place de la ligne
+    # reellement affichee sur le site.
+    candidates = sorted(result.data, key=lambda r: r.get("status") != "published")
+    for existing in candidates:
+        if sports_conflict(candidate_row.get("sport"), existing.get("sport")):
+            continue
+        if not intervals_overlap(cand, event_interval(existing)):
+            continue
         existing_tokens = signature_tokens(existing.get("title", ""))
         score = jaccard(candidate_tokens, existing_tokens)
         if score > best_score:
@@ -146,6 +210,20 @@ def merge_into_existing(sb, existing: dict, new_row: dict,
     for field in fill_fields:
         if existing.get(field) in (None, "") and new_row.get(field) not in (None, ""):
             updates[field] = new_row[field]
+
+    # Elargissement de la fenetre de l'evenement. On n'ecrase jamais une date
+    # par une date plus etroite : on ne fait qu'etendre l'intervalle pour
+    # couvrir ce que la nouvelle source apporte. Sans ca, une source qui decrit
+    # le Tour de Ski par sa date de fin laisserait l'evenement affiche sur le
+    # seul 3 janvier.
+    cand_start, cand_end = event_interval(new_row)
+    exi_start, exi_end = event_interval(existing)
+    if cand_start is not None and exi_start is not None:
+        if cand_start < exi_start:
+            updates["date_start"] = cand_start.isoformat()
+        if cand_end > exi_end:
+            updates["date_end"] = cand_end.isoformat()
+
     if not updates:
         return False
     try:
