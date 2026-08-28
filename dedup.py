@@ -153,6 +153,66 @@ def sports_conflict(a, b) -> bool:
     return bool(a and b and a != b)
 
 
+# Sources faisant autorite sur les donnees de calendrier. La FFS publie le
+# calendrier officiel ; tout le reste (sites de clubs, agregateurs du type
+# Ski-Nordique.net, saisies manuelles) en est une copie, parfois figee.
+AUTHORITATIVE_SOURCES = ("FFS calendrier",)
+
+# Fenetre de recherche d'un evenement de titre proche mais hors fusion.
+# Sert uniquement a alerter sur un decalage de calendrier, jamais a fusionner.
+SHIFT_ALERT_WINDOW_DAYS = 45
+SHIFT_ALERT_THRESHOLD = 0.7
+
+
+def source_outranks(new_source, existing_source) -> bool:
+    """True si la nouvelle source fait autorite et pas l'existante."""
+    return (new_source in AUTHORITATIVE_SOURCES
+            and existing_source not in AUTHORITATIVE_SOURCES)
+
+
+def warn_if_date_shift(sb, candidate_row: dict) -> None:
+    """
+    Signale qu'un evenement sur le point d'etre insere ressemble fortement a un
+    evenement deja en base, situe quelques semaines plus loin.
+
+    C'est la vraie signature d'un decalage de calendrier. On n'ecrase pas la
+    date existante et on ne fusionne pas : le calendrier FFS liste chaque
+    journee d'une epreuve comme une entree distincte, donc laisser une source
+    imposer sa date ferait deriver un evenement de trois jours vers son dernier
+    jour a chaque passage. Un decalage reel se tranche a la main.
+    """
+    cand = event_interval(candidate_row)
+    if cand[0] is None:
+        return
+    candidate_tokens = signature_tokens(candidate_row.get("title", ""))
+    if not candidate_tokens:
+        return
+    window = timedelta(days=SHIFT_ALERT_WINDOW_DAYS)
+    try:
+        result = sb.table("events").select(
+            "id, title, date_start, date_end, sport, source_name"
+        ).gte("date_start", (cand[0] - window).isoformat()) \
+         .lte("date_start", (cand[1] + window).isoformat()).execute()
+    except Exception:
+        return
+    for existing in result.data or []:
+        if sports_conflict(candidate_row.get("sport"), existing.get("sport")):
+            continue
+        if intervals_overlap(cand, event_interval(existing)):
+            continue  # deja traite par la deduplication
+        if jaccard(candidate_tokens, signature_tokens(existing.get("title", ""))) < SHIFT_ALERT_THRESHOLD:
+            continue
+        log.warning(
+            "   /!\\ decalage possible : '%s' (%s, source %s) ressemble a "
+            "l'event #%s '%s' du %s. Rien n'a ete fusionne, a trancher a la main.",
+            (candidate_row.get("title") or "")[:50], cand[0],
+            candidate_row.get("source_name"),
+            existing.get("id"), (existing.get("title") or "")[:50],
+            existing.get("date_start"),
+        )
+        return
+
+
 def find_duplicate(sb, candidate_row: dict, similarity_threshold: float = 0.5,
                    extra_fields: tuple = ()):
     cand = event_interval(candidate_row)
@@ -211,6 +271,16 @@ def merge_into_existing(sb, existing: dict, new_row: dict,
         if existing.get(field) in (None, "") and new_row.get(field) not in (None, ""):
             updates[field] = new_row[field]
 
+    # La source de reference corrige le sport sans discuter : il est derive du
+    # code d'epreuve (FFS-BIATH-NA -> Biathlon), donc plus fiable qu'une
+    # deduction faite sur un titre libre. Elle n'impose rien d'autre : notes,
+    # organizer et level restent ceux de la fiche la plus riche, et les dates
+    # ne sont jamais ecrasees (voir warn_if_date_shift).
+    if source_outranks(new_source_name, existing_main_source):
+        new_sport = new_row.get("sport")
+        if new_sport and existing.get("sport") != new_sport:
+            updates["sport"] = new_sport
+
     # Elargissement de la fenetre de l'evenement. On n'ecrase jamais une date
     # par une date plus etroite : on ne fait qu'etendre l'intervalle pour
     # couvrir ce que la nouvelle source apporte. Sans ca, une source qui decrit
@@ -249,6 +319,7 @@ def upsert_event(sb, row: dict, extra_fields: tuple = ()) -> str:
                 sb, existing, row, fill_fields=BASE_FILL_FIELDS + tuple(extra_fields)
             )
             return "merged" if changed else "unchanged"
+        warn_if_date_shift(sb, row)
         sb.table("events").insert(row).execute()
         return "added"
     except Exception as exc:

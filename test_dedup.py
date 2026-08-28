@@ -4,7 +4,7 @@ from dedup import (
     normalize_text, signature_tokens, jaccard,
     parse_french_date, is_future_date, MOIS_FR,
     event_interval, intervals_overlap, sports_conflict,
-    find_duplicate, merge_into_existing,
+    find_duplicate, merge_into_existing, source_outranks, warn_if_date_shift,
 )
 
 
@@ -289,3 +289,94 @@ class TestPreferenceLignePubliee:
         }
         trouve = find_duplicate(_FakeSB([pending, publie]), candidat)
         assert trouve is not None and trouve["id"] == 51
+
+
+class TestAutoriteDeSource:
+    def test_ffs_prime_sur_un_agregateur(self):
+        assert source_outranks("FFS calendrier", "Ski-Nordique.net — calendrier national FFS") is True
+
+    def test_un_agregateur_ne_prime_pas_sur_la_ffs(self):
+        assert source_outranks("Ski-Nordique.net", "FFS calendrier") is False
+
+    def test_ffs_ne_prime_pas_sur_elle_meme(self):
+        assert source_outranks("FFS calendrier", "FFS calendrier") is False
+
+    def test_le_sport_est_corrige_par_la_source_qui_fait_autorite(self):
+        """Le sport FFS vient du code d'épreuve, il prime sur une déduction de titre."""
+        existant = {
+            "id": 20, "title": "SAMSE National Tour Biathlon — Étape 2",
+            "date_start": "2026-12-19", "date_end": None,
+            "sport": "Ski de fond", "source_name": "Ski-Nordique.net",
+            "notes": "Première étape sur neige de la saison.",
+        }
+        candidat = {
+            "title": "SAMSE BIATHLON NATIONAL TOUR 2 (LES TUFFES)",
+            "date_start": "2026-12-19", "date_end": None,
+            "sport": "Biathlon", "source_name": "FFS calendrier",
+            "notes": "Type d’épreuves : FFS-BIATH-NA",
+        }
+        sb = _FakeSB([existant])
+        assert merge_into_existing(sb, existant, candidat) is True
+        assert sb.query.updates["sport"] == "Biathlon"
+        # La prose de la fiche existante n'est pas remplacée par le code FFS.
+        assert "notes" not in sb.query.updates
+
+    def test_le_sport_n_est_pas_touche_par_une_source_ordinaire(self):
+        existant = {
+            "id": 21, "title": "X", "date_start": "2026-12-19", "date_end": None,
+            "sport": "Ski de fond", "source_name": "FFS calendrier",
+        }
+        candidat = {
+            "title": "X", "date_start": "2026-12-19", "date_end": None,
+            "sport": "Biathlon", "source_name": "Un club",
+        }
+        sb = _FakeSB([existant])
+        merge_into_existing(sb, existant, candidat)
+        assert "sport" not in (sb.query.updates or {})
+
+
+class TestAlerteDecalage:
+    def test_alerte_quand_la_meme_epreuve_est_reprogrammee_plus_loin(self, caplog):
+        existant = {
+            "id": 30, "title": "SAMSE National Tour Biathlon — Étape 2",
+            "date_start": "2026-12-19", "date_end": None, "sport": "Biathlon",
+        }
+        candidat = {
+            "title": "SAMSE National Tour Biathlon — Étape 2",
+            "date_start": "2027-01-09", "date_end": None, "sport": "Biathlon",
+            "source_name": "FFS calendrier",
+        }
+        import logging
+        with caplog.at_level(logging.WARNING):
+            warn_if_date_shift(_FakeSB([existant]), candidat)
+        assert "decalage possible" in caplog.text
+
+    def test_pas_d_alerte_pour_un_evenement_sans_rapport(self, caplog):
+        existant = {
+            "id": 31, "title": "LA TRAVERSEE DU MASSACRE (PREMANON)",
+            "date_start": "2026-12-19", "date_end": None, "sport": "Ski de fond",
+        }
+        candidat = {
+            "title": "Cyclo Haut-Jura", "date_start": "2027-01-09",
+            "date_end": None, "sport": "Ski de fond", "source_name": "FFS calendrier",
+        }
+        import logging
+        with caplog.at_level(logging.WARNING):
+            warn_if_date_shift(_FakeSB([existant]), candidat)
+        assert "decalage possible" not in caplog.text
+
+    def test_pas_d_alerte_quand_la_deduplication_a_deja_fusionne(self, caplog):
+        """Chevauchement : c'est le travail de find_duplicate, pas une alerte."""
+        existant = {
+            "id": 32, "title": "CHAMPIONNATS DE FRANCE (LES TUFFES)",
+            "date_start": "2026-03-28", "date_end": "2026-03-29", "sport": "Ski de fond",
+        }
+        candidat = {
+            "title": "CHAMPIONNATS DE FRANCE (LES TUFFES)",
+            "date_start": "2026-03-29", "date_end": None, "sport": "Ski de fond",
+            "source_name": "FFS calendrier",
+        }
+        import logging
+        with caplog.at_level(logging.WARNING):
+            warn_if_date_shift(_FakeSB([existant]), candidat)
+        assert "decalage possible" not in caplog.text
