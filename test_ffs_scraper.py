@@ -252,6 +252,35 @@ class TestParseFFSDate:
         ds, de = parse_ffs_date(div)
         assert ds is None and de is None
 
+    @pytest.mark.parametrize(
+        "month_abbr, expected_month",
+        [
+            ("Jui.", "07"),   # abréviation 3 lettres utilisée par la FFS
+            ("JUI.", "07"),
+            ("Juil.", "07"),  # abréviation 4 lettres
+            ("Juin", "06"),   # non-régression : juin ne doit PAS matcher "jui"
+            ("JUIN", "06"),
+        ],
+    )
+    def test_mois_juin_juillet(self, month_abbr: str, expected_month: str):
+        """« JUI. » (juillet FFS) doit être reconnu sans casser « JUIN »."""
+        div = _make_date_div("05", month_abbr, "2026")
+        ds, de = parse_ffs_date(div)
+        assert ds == f"2026-{expected_month}-05"
+        assert de is None
+
+    def test_samse_summer_tour_5_juillet_2026(self):
+        """Cas réel : SAMSE SUMMER TOUR (Les Tuffes), en-tête « 05 JUI. 2026 »."""
+        div = _make_date_div("05", "JUI.", "2026")
+        assert parse_ffs_date(div) == ("2026-07-05", None)
+
+    def test_mois_abbr_ordre_juin_avant_jui(self):
+        """L'ordre d'itération compte : "juin"/"juil" doivent précéder "jui"."""
+        cles = list(MOIS_ABBR.keys())
+        assert "jui" in cles, '"jui" (juillet FFS) absent de MOIS_ABBR'
+        assert cles.index("juin") < cles.index("jui")
+        assert cles.index("juil") < cles.index("jui")
+
     def test_mois_abbr_couvre_tous_les_mois(self):
         # Garde-fou : on doit avoir au moins une entrée par mois 1..12
         months_present = set(MOIS_ABBR.values())

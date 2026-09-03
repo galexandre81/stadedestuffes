@@ -95,7 +95,7 @@ FFS_DISCIPLINES = [
 # ── Mois abrégés français ──────────────────────────────────────────────────────
 MOIS_ABBR = {
     "jan": 1, "fév": 2, "fev": 2, "mar": 3, "avr": 4,
-    "mai": 5, "juin": 6, "juil": 7,
+    "mai": 5, "juin": 6, "juil": 7, "jui": 7,  # FFS abrège juillet en "JUI."
     "aou": 8, "aoû": 8, "août": 8,
     "sep": 9, "oct": 10, "nov": 11,
     "déc": 12, "dec": 12,
@@ -302,7 +302,11 @@ def scrape_ffs_calendrier() -> int:
                     date_div = item.select_one(".el-date")
                     date_start, date_end = parse_ffs_date(date_div)
                 if not date_start:
-                    log.debug("   date non parsée pour : %s", title[:60])
+                    log.warning(
+                        "   FFS : date NON parsée pour « %s » (bloc brut: %r)",
+                        title[:60],
+                        date_div.get_text(" ", strip=True) if date_div else None,
+                    )
                     continue
 
                 # Type d'épreuves (ex : "FFS-BIATH-NA")
