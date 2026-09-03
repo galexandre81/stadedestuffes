@@ -10,10 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # Nécessaire pour que l'étape keepalive puisse pousser un commit
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -33,11 +29,3 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-
-      # Empêche GitHub de désactiver ce workflow planifié après 60 jours
-      # sans activité : pousse un commit "vide" seulement si le dernier
-      # commit du dépôt date de plus de 45 jours.
-      - name: Keepalive (anti-désactivation 60 jours)
-        uses: gautamkrishnar/keepalive-workflow@v2
-        with:
-          time_elapsed: '45'
