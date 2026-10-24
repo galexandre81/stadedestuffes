@@ -1,11 +1,14 @@
 /* global React, ReactDOM */
-// Generic contact modal — opens via:
-//   window.dispatchEvent(new CustomEvent('open-contact', { detail: { subject: '...' } }))
-// or:
-//   window.openContact('Mon sujet')
-//
-// Sends through FormSubmit (no email client required on the visitor's side).
-// Mounted as its own React root, available on every page that loads contact.js.
+// Generic contact modal. Opens via window.openContact('Subject').
+// Self-mounting React root + event bus.
+
+// IMPORTANT: define window.openContact FIRST so it's always callable, even if
+// React mount fails for any reason. The function dispatches a CustomEvent that
+// the React component listens for once it's mounted.
+window.openContact = function (subj) {
+  window.dispatchEvent(new CustomEvent('open-contact', { detail: { subject: subj } }));
+};
+console.log('[Tuffes] contact.js loaded, window.openContact =', typeof window.openContact);
 
 const { useState, useEffect } = React;
 
@@ -123,11 +126,9 @@ function ContactModal() {
   );
 }
 
-// Expose the global trigger BEFORE mounting so early clicks can't TypeError.
-window.openContact = (subj) => window.dispatchEvent(new CustomEvent('open-contact', { detail: { subject: subj } }));
-
 // Mount on its own root so it works on every page that loads this script.
 const contactRoot = document.createElement('div');
 contactRoot.id = 'contact-root';
 document.body.appendChild(contactRoot);
 ReactDOM.createRoot(contactRoot).render(<ContactModal />);
+console.log('[Tuffes] contact.js mounted ContactModal');

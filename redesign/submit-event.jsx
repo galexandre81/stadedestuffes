@@ -1,13 +1,11 @@
 /* global React, ReactDOM */
-// Modal "Annoncer un événement" — public form, anyone can submit.
-// Self-mounting (own React root) + event bus pattern, so it works
-// from any page without prop drilling. Open via:
-//   window.openSubmitEvent()
-// or:
-//   window.dispatchEvent(new CustomEvent('open-submit-event'))
-//
-// Insert into Supabase events with status='pending' (RLS enforces this),
-// then sends a notification email via FormSubmit.
+// Modal "Annoncer un événement". Same pattern as contact.js.
+
+// IMPORTANT: define window.openSubmitEvent FIRST so it's always callable.
+window.openSubmitEvent = function () {
+  window.dispatchEvent(new CustomEvent('open-submit-event'));
+};
+console.log('[Tuffes] submit-event.js loaded, window.openSubmitEvent =', typeof window.openSubmitEvent);
 
 const SPORT_OPTIONS = ['Ski de fond', 'Biathlon', 'Combiné nordique', 'Saut à ski', 'Para', 'Autre / Plusieurs'];
 
@@ -214,12 +212,9 @@ function SubmitEventModal() {
   );
 }
 
-// Expose the global trigger BEFORE mounting so any code that runs in the same
-// tick (e.g. an early click handler) can call it without a TypeError.
-window.openSubmitEvent = () => window.dispatchEvent(new CustomEvent('open-submit-event'));
-
 // Mount on its own root so it works on every page that loads this script.
 const submitRoot = document.createElement('div');
 submitRoot.id = 'submit-event-root';
 document.body.appendChild(submitRoot);
 ReactDOM.createRoot(submitRoot).render(<SubmitEventModal />);
+console.log('[Tuffes] submit-event.js mounted SubmitEventModal');
