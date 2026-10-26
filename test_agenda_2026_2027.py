@@ -190,6 +190,13 @@ class TestListingAndTransjuScrapers:
         """
         rows = []
         monkeypatch.setattr(se, "upsert_extended", lambda row: rows.append(row) or "added")
+        # « Aujourd'hui » figé au 01.10.2026 : sans cela le test casse dès que
+        # la date de l'exemple (24.10.2026) est passée, alors que le scraper
+        # écarte à raison les épreuves passées.
+        monkeypatch.setattr(
+            se, "is_future_date",
+            lambda d, tolerate_today=True: isinstance(d, str) and d >= "2026-10-01",
+        )
         added, _, _ = se.scrape_listing_blocks(
             "Haut-Jura Ski", BeautifulSoup(html, "html.parser"),
             "https://www.hautjuraski.fr/evenements",
